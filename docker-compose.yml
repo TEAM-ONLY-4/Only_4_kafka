@@ -2,6 +2,8 @@ version: '3.8'
 
 services:
   consumer-app:
+    ports:
+      - "8081:8081"
     # 1. 내 프로젝트를 이미지로 빌드
     build: .
     container_name: only4_kafka_consumer
