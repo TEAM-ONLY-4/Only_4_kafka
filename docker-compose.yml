@@ -9,14 +9,9 @@ services:
     # 2. 실행 후 자동으로 꺼지지 않게 설정
     restart: always
 
-    # 3. 환경 변수 덮어쓰기 (가장 중요! ⭐)
-    # application.yml에는 localhost로 되어있지만,
-    # 배포/도커 실행 시에는 아래 값으로 바꿔치기합니다.
+    # 3. 환경 변수 덮어쓰기
     environment:
-      # [Kafka 주소 변경]
-      # 로컬 도커 테스트 시: host.docker.internal:9092
-      # 실제 배포 시(같은 네트워크): kafka:29092 또는 서버_사설IP:9092
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092,host.docker.internal:9093,host.docker.internal:9094
 
       # [DB 주소 변경]
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB}
