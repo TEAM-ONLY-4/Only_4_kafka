@@ -11,6 +11,9 @@ services:
     # 2. 실행 후 자동으로 꺼지지 않게 설정
     restart: always
 
+    env_file:
+      - .env
+
     # 3. 환경 변수 덮어쓰기
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092,host.docker.internal:9093,host.docker.internal:9094
@@ -23,10 +26,6 @@ services:
       # [프로파일 설정]
       # 배포 환경임을 알려주기 위해 prod로 설정하는 경우가 많음
       SPRING_PROFILES_ACTIVE: prod
-
-    # 4. .env 파일 사용 명시
-    env_file:
-      - .env
 
     # 5. 리눅스/Mac 도커에서 호스트(주인님) 컴퓨터를 찾기 위한 설정
     extra_hosts:
