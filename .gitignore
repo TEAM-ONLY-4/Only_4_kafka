@@ -40,10 +40,8 @@ out/
 .vscode/
 
 # --- Sensitive & Local Config (보안/설정) ---
-application-db.yml
-src/main/resources/application-db.yml
+**/application.yml
 .env
-prometheus.yml
 
 # --- Docker Data (데이터 절대 올리면 안 됨) ---
 pg_data/
