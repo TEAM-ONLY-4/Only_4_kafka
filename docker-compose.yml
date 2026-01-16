@@ -16,7 +16,7 @@ services:
 
     # 3. 환경 변수 덮어쓰기
     environment:
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092,host.docker.internal:9093,host.docker.internal:9094
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
 
       # [DB 주소 변경]
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB}
