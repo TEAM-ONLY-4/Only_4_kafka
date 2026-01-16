@@ -1,6 +1,5 @@
 package com.example.only4_kafka.global.exception;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,10 +12,8 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Schema(description = "실패 Response")
 public class ErrorResponse {
 
-    @Schema(description = "성공 여부", defaultValue = "false")
     private final boolean success = false;
     private String message;             // 에러 메시지
     private int status;                 // 에러 상태 코드

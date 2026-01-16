@@ -25,24 +25,25 @@ repositories {
 }
 
 dependencies {
-    // 1. Web (이름 수정됨: starter-webmvc -> starter-web)
+    // Web (이름 수정됨: starter-webmvc -> starter-web)
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'com.google.code.gson:gson'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // 2. Data & JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'com.h2database:h2'       // h2console 라이브러리는 따로 없음 (설정으로 켬)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // DB
     runtimeOnly 'org.postgresql:postgresql'
 
-    // 7. Utils (Lombok 등)
+    // Utils (Lombok 등)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-    // 8. Swagger (Spring Boot 3 호환 버전으로 업그레이드 권장: 2.1.0 -> 2.6.0)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    // Actuator & Prometheus
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // 9. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
