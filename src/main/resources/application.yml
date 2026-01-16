@@ -1,11 +1,9 @@
-server:
-  port: 8081
-
 spring:
+  profiles:
+    active: local # 기본 모드 설정
+
+  # [공통] DB 드라이버 & JPA 설정
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -15,17 +13,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: true
 
-kafka:
-  # Only4_BE의 카프카 멀티 브로커 접근
-  bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
-
-  consumer:
-    # 그룹 ID는 프로젝트마다 유니크하게 지어주세요
-    group-id: only4-consumer-group
-    # 메시지를 처음부터 읽을지(earliest), 최신것만 읽을지(latest) 설정
-    auto-offset-reset: earliest
-    # 키/값 데이터를 어떻게 해석할지 설정 (기본 문자열)
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  # [공통] Kafka Consumer 설정 (주소 제외)
+  kafka:
+    consumer:
+      group-id: only4-consumer-group
+      # earliest: 큐에 쌓인 옛날 메시지부터 읽기 / latest: 지금부터 온 것만 읽기
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
