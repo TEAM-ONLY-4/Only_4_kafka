@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -73,5 +72,9 @@ public class Bill extends BaseEntity {
         if (unpaidAmount == null) unpaidAmount = BigDecimal.ZERO;
         if (totalDiscountAmount == null) totalDiscountAmount = BigDecimal.ZERO;
         if (totalBilledAmount == null) totalBilledAmount = BigDecimal.ZERO;
+    }
+
+    public void changeSendStatus(BillSendStatus sendStatus) {
+        this.billSendStatus = sendStatus;
     }
 }

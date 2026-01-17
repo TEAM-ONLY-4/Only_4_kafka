@@ -3,12 +3,10 @@ package com.example.only4_kafka.listener;
 import com.example.only4_kafka.config.properties.KafkaTopicsProperties;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
 import com.example.only4_kafka.service.SmsSendService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 public class SmsRequestListener {
     private final KafkaTopicsProperties topics;
     private final SmsSendService smsSendService;
@@ -28,6 +26,6 @@ public class SmsRequestListener {
 //            groupId = "#{@kafkaTopicsProperties.groupId}"
     )
     public void listen(SmsSendRequestEvent message) {
-        smsSendService.send(message);
+        smsSendService.processSms(message);
     }
 }

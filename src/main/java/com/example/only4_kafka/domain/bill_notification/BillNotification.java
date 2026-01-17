@@ -34,4 +34,8 @@ public class BillNotification extends BaseEntity {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "send_status", nullable = false, columnDefinition = "bill_notification_status_enum")
     private BillNotificationStatus sendStatus;
+
+    public void changeSendStatus(BillNotificationStatus sendStatus) {
+        this.sendStatus = sendStatus;
+    }
 }
