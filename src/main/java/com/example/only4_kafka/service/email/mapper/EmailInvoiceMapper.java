@@ -1,4 +1,4 @@
-package com.example.only4_kafka.service.email;
+package com.example.only4_kafka.service.email.mapper;
 
 import com.example.only4_kafka.constant.BillItemCategoryConstant;
 import com.example.only4_kafka.constant.EmailConstant;

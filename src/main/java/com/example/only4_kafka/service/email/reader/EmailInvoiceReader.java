@@ -1,4 +1,4 @@
-package com.example.only4_kafka.service.email;
+package com.example.only4_kafka.service.email.reader;
 
 import com.example.only4_kafka.constant.EmailConstant;
 import com.example.only4_kafka.repository.InvoiceQueryRepository;
