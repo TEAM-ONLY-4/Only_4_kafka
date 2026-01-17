@@ -1,0 +1,106 @@
+package com.example.only4_kafka.repository;
+
+import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
+import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+@Repository
+public class InvoiceQueryRepository {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public Optional<EmailInvoiceMemberBillRow> findMemberBill(Long memberId, Long billId) {
+        return jdbcTemplate.query(
+                """
+                SELECT
+                    m.id AS member_id,
+                    m.name AS member_name,
+                    m.phone_number AS member_phone_number,
+                    m.member_grade AS member_grade,
+                    m.address AS member_address,
+                    m.email AS member_email,
+                    m.payment_method AS member_payment_method,
+                    b.id AS bill_id,
+                    b.billing_year_month AS billing_year_month,
+                    b.total_amount AS total_amount,
+                    b.vat AS vat,
+                    b.unpaid_amount AS unpaid_amount,
+                    b.total_discount_amount AS total_discount_amount,
+                    b.total_billed_amount AS total_billed_amount,
+                    b.due_date AS due_date,
+                    b.created_date AS created_date,
+                    b.payment_owner_name_snapshot AS payment_owner_name_snapshot,
+                    b.payment_name_snapshot AS payment_name_snapshot,
+                    b.payment_number_snapshot AS payment_number_snapshot
+                FROM member m
+                JOIN bill b ON b.member_id = m.id
+                WHERE m.id = ? AND b.id = ?
+                """,
+                this::mapMemberBillRow,
+                memberId,
+                billId
+        ).stream().findFirst();
+    }
+
+    public List<EmailInvoiceItemRow> findBillItems(Long billId) {
+        return jdbcTemplate.query(
+                """
+                SELECT
+                    item_category,
+                    item_subcategory,
+                    item_name,
+                    amount,
+                    detail_snapshot
+                FROM bill_item
+                WHERE bill_id = ?
+                ORDER BY id
+                """,
+                this::mapItemRow,
+                billId
+        );
+    }
+
+    private EmailInvoiceMemberBillRow mapMemberBillRow(ResultSet rs, int rowNum) throws SQLException {
+        return new EmailInvoiceMemberBillRow(
+                rs.getLong("member_id"),
+                rs.getString("member_name"),
+                rs.getString("member_phone_number"),
+                rs.getString("member_grade"),
+                rs.getString("member_address"),
+                rs.getString("member_email"),
+                rs.getString("member_payment_method"),
+                rs.getLong("bill_id"),
+                rs.getObject("billing_year_month", LocalDate.class),
+                rs.getBigDecimal("total_amount"),
+                rs.getBigDecimal("vat"),
+                rs.getBigDecimal("unpaid_amount"),
+                rs.getBigDecimal("total_discount_amount"),
+                rs.getBigDecimal("total_billed_amount"),
+                rs.getObject("due_date", LocalDate.class),
+                rs.getObject("created_date", LocalDate.class),
+                rs.getString("payment_owner_name_snapshot"),
+                rs.getString("payment_name_snapshot"),
+                rs.getString("payment_number_snapshot")
+        );
+    }
+
+    private EmailInvoiceItemRow mapItemRow(ResultSet rs, int rowNum) throws SQLException {
+        return new EmailInvoiceItemRow(
+                rs.getString("item_category"),
+                rs.getString("item_subcategory"),
+                rs.getString("item_name"),
+                rs.getBigDecimal("amount"),
+                rs.getString("detail_snapshot")
+        );
+    }
+
+}

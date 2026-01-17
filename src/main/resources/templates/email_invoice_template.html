@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LG U+ 모바일 명세서</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6;">
+    <tr>
+        <td align="center" style="padding: 40px 20px;">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #E50914; padding: 30px 20px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: bold; color: #ffffff; margin-bottom: 10px;">
+                            LG U+
+                        </div>
+                        <h1 style="color: #ffffff; font-size: 20px; font-weight: 600; margin: 0;">
+                            모바일 명세서
+                        </h1>
+                        <p style="color: #ffffff; font-size: 14px; margin: 10px 0 0 0; opacity: 0.9;" th:text="${invoice.billingYear} + '년 ' + ${invoice.billingMonth} + '월'">
+                            2025년 12월
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding: 30px 20px;">
+
+                        <!-- Customer Info -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="2">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        고객정보
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px; width: 140px;">고객명</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.customerName}">강승*</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">모바일 서비스번호</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.phoneNumber}">010-44**-*382</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">고객 등급</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.customerGrade}">VIP</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">고객 주소</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.customerAddress}">서울특별시 강남구 테헤란로 123</td>
+                            </tr>
+                        </table>
+
+                        <!-- Invoice Info -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="2">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        청구서 정보
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px; width: 140px;">명세서번호</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.invoiceNumber}">2025120500001</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">이용기간</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.usagePeriod}">2025.11.1 ~ 11.30</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">작성일자</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; font-weight: 600;" th:text="${invoice.issueDate}">2025.12.5</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">납기일</td>
+                                <td style="padding: 6px 0; color: #E50914; font-size: 14px; font-weight: 700;" th:text="${invoice.dueDate}">2025.12.31</td>
+                            </tr>
+                        </table>
+
+                        <!-- Total Amount -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FEF2F2; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #E50914;">
+                            <tr>
+                                <td style="font-size: 18px; font-weight: bold; color: #111827; padding-bottom: 15px;">납부하실 금액</td>
+                                <td style="font-size: 28px; font-weight: bold; color: #E50914; text-align: right; padding-bottom: 15px;" th:text="${#numbers.formatInteger(invoice.totalPayment, 0, 'COMMA')} + ' 원'">31,340 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">이용금액</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.usageAmount, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">할인금액</td>
+                                <td style="padding: 6px 0; color: #E50914; font-size: 14px; text-align: right; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.discountAmount, 0, 'COMMA')} + ' 원'">-13,659 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">미납요금</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')} + ' 원'">0 원</td>
+                            </tr>
+                        </table>
+
+                        <!-- Monthly Fee Details -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="2">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        당월요금 상세내역
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">월정액</td>
+                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.monthlyFee, 0, 'COMMA')} + ' 원'">28,497 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">10원미만할인요금</td>
+                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.roundingDiscount, 0, 'COMMA')} + ' 원'">-6 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">부가가치세</td>
+                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.vat, 0, 'COMMA')} + ' 원'">2,849 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">추가 사용요금</td>
+                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.additionalFee, 0, 'COMMA')} + ' 원'">0 원</td>
+                            </tr>
+                        </table>
+
+                        <!-- Product Details -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="2">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        상품 및 이용내역
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                                        <div style="font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 10px;" th:text="'대표 상품: ' + ${invoice.mainProduct}">
+                                            대표 상품: 5G 프리미엄 플랜
+                                        </div>
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px;">
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #6b7280; width: 100px;">카테고리</td>
+                                                <td style="padding: 5px 0; color: #111827;" th:text="${invoice.productCategory}">모바일</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #6b7280;">요금항목</td>
+                                                <td style="padding: 5px 0; color: #111827;" th:text="${invoice.feeType}">월정액</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 5px 0; color: #6b7280;">금액</td>
+                                                <td style="padding: 5px 0; color: #111827; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.productAmount, 0, 'COMMA')} + ' 원'">55,000 원</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div style="font-size: 13px; color: #6b7280; line-height: 1.6; background-color: #f9fafb; padding: 12px; border-radius: 6px;">
+                                        <strong style="color: #111827;">상품 스펙:</strong><br/>
+                                        <span th:utext="${invoice.productSpec}">
+                                                • 데이터: 무제한 (5G 속도)<br/>
+                                                • 음성통화: 무제한 (초당 1.8원)<br/>
+                                                • 영상통화: 무제한 (초당 3.0원)<br/>
+                                                • 문자메시지: 기본 제공
+                                            </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Discount Details -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="2">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        할인내역
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr th:each="discount : ${invoice.discounts}">
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;" th:text="${discount.name}">요금할인</td>
+                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(discount.amount, 0, 'COMMA')} + ' 원'">-10,000 원</td>
+                            </tr>
+                        </table>
+
+                        <!-- Payment Info -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; border: 1px solid #86efac;">
+                            <tr>
+                                <td colspan="2">
+                                    <h3 style="font-size: 15px; font-weight: bold; color: #166534; margin: 0 0 10px 0;">
+                                        납부정보
+                                    </h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px; width: 100px;" th:text="${invoice.paymentType == 'CARD' ? '카드주' : '예금주'}">카드주</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentHolder}">강승*</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px;" th:text="${invoice.paymentType == 'CARD' ? '카드명' : '은행명'}">카드명</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentName}">현대카드</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px;" th:text="${invoice.paymentType == 'CARD' ? '카드번호' : '계좌번호'}">카드번호</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentNumber}">****-****-****-1234</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <p style="font-size: 13px; color: #166534; margin: 15px 0 0 0; line-height: 1.5;">
+                                        명세서 작성일자 이후 납부하신 요금은 [납부하실 금액]에 반영되지 않을 수 있습니다.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #1f2937; padding: 25px 20px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 13px; margin: 0 0 8px 0;">
+                            본 메일은 발신전용입니다. 문의사항은 고객센터(1544-0010)로 연락주세요.
+                        </p>
+                        <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                            © 2025 LG U+. All rights reserved.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
