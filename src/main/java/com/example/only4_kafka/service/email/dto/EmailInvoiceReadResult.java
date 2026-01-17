@@ -10,6 +10,6 @@ public record EmailInvoiceReadResult(
         Long memberId,
         Long billId,
         EmailInvoiceMemberBillRow memberBill,
-        List<EmailInvoiceItemRow> items,
-        List<RecentBillRow> recentBills
+        List<EmailInvoiceItemRow> itemList,
+        List<RecentBillRow> recentBillList
 ) {}

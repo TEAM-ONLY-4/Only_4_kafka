@@ -1,5 +1,6 @@
 package com.example.only4_kafka.service.email;
 
+import com.example.only4_kafka.constant.EmailConstant;
 import com.example.only4_kafka.repository.InvoiceQueryRepository;
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
@@ -15,8 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailInvoiceReader {
 
-    private static final int RECENT_MONTHS_COUNT = 4;
-
     private final InvoiceQueryRepository queryRepository;
 
     @Transactional(readOnly = true)
@@ -24,15 +23,15 @@ public class EmailInvoiceReader {
         EmailInvoiceMemberBillRow memberBill = queryRepository.findMemberBill(memberId, billId)
                 .orElseThrow(() -> new IllegalArgumentException("Member/Bill not found."));
 
-        List<EmailInvoiceItemRow> itemRows = queryRepository.findBillItems(billId);
+        List<EmailInvoiceItemRow> itemRowList = queryRepository.findBillItems(billId);
 
-        List<RecentBillRow> recentBills = queryRepository.findRecentBills(
+        List<RecentBillRow> recentBillList = queryRepository.findRecentBills(
                 memberId,
                 memberBill.billingYearMonth(),
-                RECENT_MONTHS_COUNT
+                EmailConstant.RECENT_MONTHS_COUNT
         );
 
-        return new EmailInvoiceReadResult(memberId, billId, memberBill, itemRows, recentBills);
+        return new EmailInvoiceReadResult(memberId, billId, memberBill, itemRowList, recentBillList);
     }
 
 }

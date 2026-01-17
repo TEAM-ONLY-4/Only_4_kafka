@@ -31,13 +31,13 @@ public record EmailInvoiceTemplateDto(
         BigDecimal additionalFee,
 
         // 최근 4개월 요금내역
-        List<RecentMonth> recentMonths,
+        List<RecentMonth> recentMonthList,
 
         // 상품 정보
-        List<Product> products,
+        List<Product> productList,
 
         // 할인내역
-        List<Discount> discounts,
+        List<Discount> discountList,
         BigDecimal totalDiscountAmount,
 
         // 결제정보

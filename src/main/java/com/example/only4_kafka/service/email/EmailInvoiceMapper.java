@@ -1,5 +1,7 @@
 package com.example.only4_kafka.service.email;
 
+import com.example.only4_kafka.constant.BillItemCategoryConstant;
+import com.example.only4_kafka.constant.EmailConstant;
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
 import com.example.only4_kafka.repository.dto.RecentBillRow;
@@ -17,25 +19,24 @@ import java.util.List;
 @Component
 public class EmailInvoiceMapper {
 
-    private static final String CATEGORY_DISCOUNT = "DISCOUNT";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.M.d");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(EmailConstant.DATE_FORMAT);
 
     public EmailInvoiceTemplateDto toDto(EmailInvoiceReadResult emailInvoiceReadResult) {
         EmailInvoiceMemberBillRow memberBill = emailInvoiceReadResult.memberBill();
-        List<EmailInvoiceItemRow> items = emailInvoiceReadResult.items();
-        List<RecentBillRow> recentBillRows = emailInvoiceReadResult.recentBills();
+        List<EmailInvoiceItemRow> itemList = emailInvoiceReadResult.itemList();
+        List<RecentBillRow> recentBillRowList = emailInvoiceReadResult.recentBillList();
 
         // 상품/할인 분류
-        List<EmailInvoiceTemplateDto.Product> products = new ArrayList<>();
-        List<EmailInvoiceTemplateDto.Discount> discounts = new ArrayList<>();
+        List<EmailInvoiceTemplateDto.Product> productList = new ArrayList<>();
+        List<EmailInvoiceTemplateDto.Discount> discountList = new ArrayList<>();
         BigDecimal monthlyFee = BigDecimal.ZERO;
         BigDecimal additionalFee = BigDecimal.ZERO;
 
-        for (EmailInvoiceItemRow item : items) {
-            if (CATEGORY_DISCOUNT.equals(item.category())) {
-                discounts.add(new EmailInvoiceTemplateDto.Discount(item.name(), item.amount()));
+        for (EmailInvoiceItemRow item : itemList) {
+            if (BillItemCategoryConstant.DISCOUNT.equals(item.category())) {
+                discountList.add(new EmailInvoiceTemplateDto.Discount(item.name(), item.amount()));
             } else {
-                products.add(new EmailInvoiceTemplateDto.Product(
+                productList.add(new EmailInvoiceTemplateDto.Product(
                         item.name(),
                         item.amount(),
                         item.category(),
@@ -44,7 +45,7 @@ public class EmailInvoiceMapper {
                 ));
 
                 // 카테고리별 금액 합산
-                if ("SUBSCRIPTION".equals(item.category())) {
+                if (BillItemCategoryConstant.SUBSCRIPTION.equals(item.category())) {
                     monthlyFee = monthlyFee.add(item.amount());
                 } else {
                     additionalFee = additionalFee.add(item.amount());
@@ -53,7 +54,7 @@ public class EmailInvoiceMapper {
         }
 
         // 최근 4개월 매핑
-        List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = mapRecentMonths(recentBillRows);
+        List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = mapRecentMonths(recentBillRowList);
 
         return new EmailInvoiceTemplateDto(
                 // 기본 정보
@@ -86,8 +87,8 @@ public class EmailInvoiceMapper {
                 recentMonthList,
 
                 // 상품/할인
-                products,
-                discounts,
+                productList,
+                discountList,
                 memberBill.totalDiscountAmount(),
 
                 // 결제정보
@@ -98,22 +99,22 @@ public class EmailInvoiceMapper {
     }
 
     // 최근 4개월 변환
-    private List<EmailInvoiceTemplateDto.RecentMonth> mapRecentMonths(List<RecentBillRow> recentBillRows) {
-        List<EmailInvoiceTemplateDto.RecentMonth> recentMonths = new ArrayList<>();
+    private List<EmailInvoiceTemplateDto.RecentMonth> mapRecentMonths(List<RecentBillRow> recentBillRowList) {
+        List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = new ArrayList<>();
 
-        for (RecentBillRow row : recentBillRows) {
-            recentMonths.add(new EmailInvoiceTemplateDto.RecentMonth(
-                    formatYearMonth(row.billingYearMonth()),
-                    row.monthlyFee(),
-                    row.additionalFee(),
+        for (RecentBillRow recentBillRow : recentBillRowList) {
+            recentMonthList.add(new EmailInvoiceTemplateDto.RecentMonth(
+                    formatYearMonth(recentBillRow.billingYearMonth()),
+                    recentBillRow.monthlyFee(),
+                    recentBillRow.additionalFee(),
                     BigDecimal.ZERO,  // roundingDiscount
-                    row.vat(),
-                    row.totalDiscountAmount(),
-                    row.totalBilledAmount()
+                    recentBillRow.vat(),
+                    recentBillRow.totalDiscountAmount(),
+                    recentBillRow.totalBilledAmount()
             ));
         }
 
-        return recentMonths;
+        return recentMonthList;
     }
 
     // 청구서 번호 생성
