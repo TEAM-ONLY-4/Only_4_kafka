@@ -82,8 +82,9 @@ public enum ErrorCode {
 
     ILLEGAL_ARGUMENT_EXCEPTION_ERROR(400, "B997", "Illegal Argument Exception Error"),
 
-    ARRAY_INDEX_OUT_OF_BOUNDS_ERROR(400, "B996", "Array Index Out of Bounds Error")
+    ARRAY_INDEX_OUT_OF_BOUNDS_ERROR(400, "B996", "Array Index Out of Bounds Error"),
 
+    SMS_SEND_FAILED(500, "S001", "SMS 발송에 실패했습니다.")
     ;
 
     /**
