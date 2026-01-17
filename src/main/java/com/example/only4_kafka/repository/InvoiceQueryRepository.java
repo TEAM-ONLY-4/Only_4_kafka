@@ -2,6 +2,7 @@ package com.example.only4_kafka.repository;
 
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
+import com.example.only4_kafka.repository.dto.RecentBillRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -66,6 +67,45 @@ public class InvoiceQueryRepository {
                 """,
                 this::mapItemRow,
                 billId
+        );
+    }
+
+    public List<RecentBillRow> findRecentBills(Long memberId, LocalDate currentBillingYearMonth, int months) {
+        return jdbcTemplate.query(
+                """
+                SELECT
+                    b.billing_year_month,
+                    b.total_amount,
+                    b.vat,
+                    b.total_discount_amount,
+                    b.total_billed_amount,
+                    COALESCE(SUM(CASE WHEN bi.item_category = 'SUBSCRIPTION' THEN bi.amount ELSE 0 END), 0) AS monthly_fee,
+                    COALESCE(SUM(CASE WHEN bi.item_category IN ('OVER_USAGE', 'ONE_TIME_PURCHASE') THEN bi.amount ELSE 0 END), 0) AS additional_fee
+                FROM bill b
+                LEFT JOIN bill_item bi ON bi.bill_id = b.id
+                WHERE b.member_id = ?
+                  AND b.billing_year_month <= ?
+                  AND b.status = 'ACTIVE'
+                GROUP BY b.id, b.billing_year_month, b.total_amount, b.vat, b.total_discount_amount, b.total_billed_amount
+                ORDER BY b.billing_year_month DESC
+                LIMIT ?
+                """,
+                this::mapRecentBillRow,
+                memberId,
+                currentBillingYearMonth,
+                months
+        );
+    }
+
+    private RecentBillRow mapRecentBillRow(ResultSet rs, int rowNum) throws SQLException {
+        return new RecentBillRow(
+                rs.getObject("billing_year_month", LocalDate.class),
+                rs.getBigDecimal("total_amount"),
+                rs.getBigDecimal("vat"),
+                rs.getBigDecimal("total_discount_amount"),
+                rs.getBigDecimal("total_billed_amount"),
+                rs.getBigDecimal("monthly_fee"),
+                rs.getBigDecimal("additional_fee")
         );
     }
 

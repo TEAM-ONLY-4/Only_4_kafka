@@ -84,23 +84,136 @@
                             </tr>
                         </table>
 
-                        <!-- Total Amount -->
+                        <!-- Total Amount - Highlighted -->
                         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FEF2F2; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #E50914;">
                             <tr>
-                                <td style="font-size: 18px; font-weight: bold; color: #111827; padding-bottom: 15px;">납부하실 금액</td>
-                                <td style="font-size: 28px; font-weight: bold; color: #E50914; text-align: right; padding-bottom: 15px;" th:text="${#numbers.formatInteger(invoice.totalPayment, 0, 'COMMA')} + ' 원'">31,340 원</td>
+                                <td colspan="2" style="padding-bottom: 15px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="font-size: 18px; font-weight: bold; color: #111827;">납부하실 금액</td>
+                                            <td style="font-size: 28px; font-weight: bold; color: #E50914; text-align: right;" th:text="${#numbers.formatInteger(invoice.totalPayment, 0, 'COMMA')} + ' 원'">42,890 원</td>
+                                        </tr>
+                                    </table>
+                                </td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">이용금액</td>
-                                <td style="padding: 6px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.usageAmount, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                                <td style="padding: 6px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.usageAmount, 0, 'COMMA')} + ' 원'">62,999 원</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">할인금액</td>
-                                <td style="padding: 6px 0; color: #E50914; font-size: 14px; text-align: right; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.discountAmount, 0, 'COMMA')} + ' 원'">-13,659 원</td>
+                                <td style="padding: 6px 0; color: #E50914; font-size: 14px; text-align: right; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.discountAmount, 0, 'COMMA')} + ' 원'">-20,109 원</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">미납요금</td>
                                 <td style="padding: 6px 0; color: #111827; font-size: 14px; text-align: right; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')} + ' 원'">0 원</td>
+                            </tr>
+                        </table>
+
+                        <!-- Recent 4 Months Billing History -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="5">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        최근 4개월 요금내역
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="5">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                                            <th style="padding: 10px 0; text-align: left; color: #6b7280; font-size: 14px; font-weight: 600;">구분</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentMonths[0].month}">2025.9</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentMonths[1].month}">2025.10</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentMonths[2].month}">2025.11</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentMonths[3].month}">2025.12</th>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">월정액</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[0].monthlyFee, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[1].monthlyFee, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[2].monthlyFee, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[3].monthlyFee, 0, 'COMMA')} + ' 원'">44,999 원</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">추가사용요금</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[0].additionalFee, 0, 'COMMA')} + ' 원'">0 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[1].additionalFee, 0, 'COMMA')} + ' 원'">0 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[2].additionalFee, 0, 'COMMA')} + ' 원'">0 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[3].additionalFee, 0, 'COMMA')} + ' 원'">0 원</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">10원미만할인요금</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[0].roundingDiscount, 0, 'COMMA')} + ' 원'">-6 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[1].roundingDiscount, 0, 'COMMA')} + ' 원'">-6 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[2].roundingDiscount, 0, 'COMMA')} + ' 원'">-6 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[3].roundingDiscount, 0, 'COMMA')} + ' 원'">-9 원</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">부가가치세</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[0].vat, 0, 'COMMA')} + ' 원'">4,499 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[1].vat, 0, 'COMMA')} + ' 원'">4,499 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[2].vat, 0, 'COMMA')} + ' 원'">4,499 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentMonths[3].vat, 0, 'COMMA')} + ' 원'">3,899 원</td>
+                                        </tr>
+                                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">할인금액</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[0].discountAmount, 0, 'COMMA')} + ' 원'">-18,352 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[1].discountAmount, 0, 'COMMA')} + ' 원'">-19,890 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[2].discountAmount, 0, 'COMMA')} + ' 원'">-18,352 원</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #E50914; font-size: 14px;" th:text="'-' + ${#numbers.formatInteger(invoice.recentMonths[3].discountAmount, 0, 'COMMA')} + ' 원'">-20,109 원</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 12px 0; color: #111827; font-size: 15px; font-weight: bold;">납부하실 금액</td>
+                                            <td style="padding: 12px 0; text-align: right; color: #E50914; font-size: 15px; font-weight: bold;" th:text="${#numbers.formatInteger(invoice.recentMonths[0].totalPayment, 0, 'COMMA')} + ' 원'">31,140 원</td>
+                                            <td style="padding: 12px 0; text-align: right; color: #E50914; font-size: 15px; font-weight: bold;" th:text="${#numbers.formatInteger(invoice.recentMonths[1].totalPayment, 0, 'COMMA')} + ' 원'">29,602 원</td>
+                                            <td style="padding: 12px 0; text-align: right; color: #E50914; font-size: 15px; font-weight: bold;" th:text="${#numbers.formatInteger(invoice.recentMonths[2].totalPayment, 0, 'COMMA')} + ' 원'">31,140 원</td>
+                                            <td style="padding: 12px 0; text-align: right; color: #E50914; font-size: 15px; font-weight: bold;" th:text="${#numbers.formatInteger(invoice.recentMonths[3].totalPayment, 0, 'COMMA')} + ' 원'">42,890 원</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Recent 3 Months Usage -->
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
+                            <tr>
+                                <td colspan="4">
+                                    <h2 style="font-size: 16px; font-weight: bold; color: #111827; margin: 0 0 15px 0;">
+                                        최근 3개월 이용량
+                                    </h2>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="4">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                        <tr style="border-bottom: 2px solid #e5e7eb;">
+                                            <th style="padding: 10px 0; text-align: left; color: #6b7280; font-size: 14px; font-weight: 600;">구분</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentUsage[0].month}">2025.10</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentUsage[1].month}">2025.11</th>
+                                            <th style="padding: 10px 0; text-align: right; color: #6b7280; font-size: 14px; font-weight: 600;" th:text="${invoice.recentUsage[2].month}">2025.12</th>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">데이터</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatDecimal(invoice.recentUsage[0].dataUsage, 0, 'COMMA', 2, 'POINT')} + 'MB'">16,959.3MB</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatDecimal(invoice.recentUsage[1].dataUsage, 0, 'COMMA', 2, 'POINT')} + 'MB'">19,470.29MB</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatDecimal(invoice.recentUsage[2].dataUsage, 0, 'COMMA', 2, 'POINT')} + 'MB'">16,843.24MB</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">음성통화</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[0].voiceCalls, 0, 'COMMA')} + '건'">0건</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[1].voiceCalls, 0, 'COMMA')} + '건'">0건</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[2].voiceCalls, 0, 'COMMA')} + '건'">0건</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px 0; color: #111827; font-size: 14px; font-weight: 600;">문자</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[0].smsCount, 0, 'COMMA')} + '건'">0건</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[1].smsCount, 0, 'COMMA')} + '건'">0건</td>
+                                            <td style="padding: 10px 0; text-align: right; color: #111827; font-size: 14px;" th:text="${#numbers.formatInteger(invoice.recentUsage[2].smsCount, 0, 'COMMA')} + '건'">0건</td>
+                                        </tr>
+                                    </table>
+                                </td>
                             </tr>
                         </table>
 
@@ -115,15 +228,15 @@
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">월정액</td>
-                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.monthlyFee, 0, 'COMMA')} + ' 원'">28,497 원</td>
+                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.monthlyFee, 0, 'COMMA')} + ' 원'">38,990 원</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">10원미만할인요금</td>
-                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.roundingDiscount, 0, 'COMMA')} + ' 원'">-6 원</td>
+                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(invoice.roundingDiscount, 0, 'COMMA')} + ' 원'">-9 원</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;">부가가치세</td>
-                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.vat, 0, 'COMMA')} + ' 원'">2,849 원</td>
+                                <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.vat, 0, 'COMMA')} + ' 원'">3,899 원</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">추가 사용요금</td>
@@ -131,7 +244,7 @@
                             </tr>
                         </table>
 
-                        <!-- Product Details -->
+                        <!-- Product Details - Multiple Products -->
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f3f4f6;">
                             <tr>
                                 <td colspan="2">
@@ -140,35 +253,32 @@
                                     </h2>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr th:each="product, iterStat : ${invoice.products}">
                                 <td colspan="2">
-                                    <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-                                        <div style="font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 10px;" th:text="'대표 상품: ' + ${invoice.mainProduct}">
-                                            대표 상품: 5G 프리미엄 플랜
+                                    <div th:style="'background-color: #f9fafb; padding: 15px; border-radius: 6px; border: 1px solid #e5e7eb;' + (${iterStat.last} ? '' : ' margin-bottom: 15px;')">
+                                        <div style="font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                            <span th:text="${product.name}">대표 상품: 5G 프리미엄 플랜</span>
+                                            <span style="color: #E50914;" th:text="${#numbers.formatInteger(product.amount, 0, 'COMMA')} + ' 원'">55,000 원</span>
                                         </div>
-                                        <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px; margin-bottom: 10px;">
                                             <tr>
-                                                <td style="padding: 5px 0; color: #6b7280; width: 100px;">카테고리</td>
-                                                <td style="padding: 5px 0; color: #111827;" th:text="${invoice.productCategory}">모바일</td>
+                                                <td style="padding: 5px 0; color: #6b7280; width: 140px;">카테고리</td>
+                                                <td style="padding: 5px 0; color: #111827;" th:text="${product.category}">모바일</td>
                                             </tr>
                                             <tr>
                                                 <td style="padding: 5px 0; color: #6b7280;">요금항목</td>
-                                                <td style="padding: 5px 0; color: #111827;" th:text="${invoice.feeType}">월정액</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 5px 0; color: #6b7280;">금액</td>
-                                                <td style="padding: 5px 0; color: #111827; font-weight: 600;" th:text="${#numbers.formatInteger(invoice.productAmount, 0, 'COMMA')} + ' 원'">55,000 원</td>
+                                                <td style="padding: 5px 0; color: #111827;" th:text="${product.feeType}">월정액</td>
                                             </tr>
                                         </table>
-                                    </div>
-                                    <div style="font-size: 13px; color: #6b7280; line-height: 1.6; background-color: #f9fafb; padding: 12px; border-radius: 6px;">
-                                        <strong style="color: #111827;">상품 스펙:</strong><br/>
-                                        <span th:utext="${invoice.productSpec}">
-                                                • 데이터: 무제한 (5G 속도)<br/>
-                                                • 음성통화: 무제한 (초당 1.8원)<br/>
-                                                • 영상통화: 무제한 (초당 3.0원)<br/>
-                                                • 문자메시지: 기본 제공
-                                            </span>
+                                        <div style="font-size: 13px; color: #6b7280; line-height: 1.6; background-color: #ffffff; padding: 12px; border-radius: 6px;">
+                                            <strong style="color: #111827;">상품 스펙:</strong><br/>
+                                            <span th:utext="${product.spec}">
+                                                    • 데이터: 무제한 (5G 속도)<br/>
+                                                    • 음성통화: 무제한 (초당 1.8원)<br/>
+                                                    • 영상통화: 무제한 (초당 3.0원)<br/>
+                                                    • 문자메시지: 기본 제공
+                                                </span>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -185,7 +295,11 @@
                             </tr>
                             <tr th:each="discount : ${invoice.discounts}">
                                 <td style="padding: 8px 0; color: #6b7280; font-size: 14px; border-bottom: 1px solid #e5e7eb;" th:text="${discount.name}">요금할인</td>
-                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(discount.amount, 0, 'COMMA')} + ' 원'">-10,000 원</td>
+                                <td style="padding: 8px 0; color: #E50914; font-size: 14px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;" th:text="'-' + ${#numbers.formatInteger(discount.amount, 0, 'COMMA')} + ' 원'">-12,000 원</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px 0 8px 0; color: #111827; font-size: 15px; font-weight: bold; border-top: 2px solid #E50914;">총 할인 금액</td>
+                                <td style="padding: 12px 0 8px 0; color: #E50914; font-size: 15px; text-align: right; font-weight: bold; border-top: 2px solid #E50914;" th:text="'-' + ${#numbers.formatInteger(invoice.totalDiscountAmount, 0, 'COMMA')} + ' 원'">-20,109 원</td>
                             </tr>
                         </table>
 
@@ -199,20 +313,20 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td style="padding: 5px 0; color: #166534; font-size: 14px; width: 100px;" th:text="${invoice.paymentType == 'CARD' ? '카드주' : '예금주'}">카드주</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px; width: 100px;">예금주/카드주</td>
                                 <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentHolder}">강승*</td>
                             </tr>
                             <tr>
-                                <td style="padding: 5px 0; color: #166534; font-size: 14px;" th:text="${invoice.paymentType == 'CARD' ? '카드명' : '은행명'}">카드명</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px;">은행/카드명</td>
                                 <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentName}">현대카드</td>
                             </tr>
                             <tr>
-                                <td style="padding: 5px 0; color: #166534; font-size: 14px;" th:text="${invoice.paymentType == 'CARD' ? '카드번호' : '계좌번호'}">카드번호</td>
+                                <td style="padding: 5px 0; color: #166534; font-size: 14px;">계좌/카드번호</td>
                                 <td style="padding: 5px 0; color: #166534; font-size: 14px; font-weight: 600;" th:text="${invoice.paymentNumber}">****-****-****-1234</td>
                             </tr>
                             <tr>
-                                <td colspan="2">
-                                    <p style="font-size: 13px; color: #166534; margin: 15px 0 0 0; line-height: 1.5;">
+                                <td colspan="2" style="padding-top: 15px;">
+                                    <p style="font-size: 13px; color: #166534; margin: 0; line-height: 1.5;">
                                         명세서 작성일자 이후 납부하신 요금은 [납부하실 금액]에 반영되지 않을 수 있습니다.
                                     </p>
                                 </td>
@@ -233,7 +347,6 @@
                         </p>
                     </td>
                 </tr>
-
             </table>
         </td>
     </tr>
