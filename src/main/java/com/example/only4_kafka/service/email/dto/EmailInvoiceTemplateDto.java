@@ -3,7 +3,7 @@ package com.example.only4_kafka.service.email.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record EmailInvoiceDto(
+public record EmailInvoiceTemplateDto(
         // 기본 정보
         int billingYear,
         int billingMonth,
