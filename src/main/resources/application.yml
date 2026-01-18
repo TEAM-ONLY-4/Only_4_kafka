@@ -16,6 +16,9 @@ spring:
 
   # [공통] Kafka Consumer 설정 (주소 제외)
   kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
 #      group-id: only4-consumer-group
       # earliest: 큐에 쌓인 옛날 메시지부터 읽기 / latest: 지금부터 온 것만 읽기

@@ -18,7 +18,8 @@ public class SmsRequestListener {
 
     @KafkaListener(
             topics = "${app.kafka.topics.sms-request}",
-            groupId = "${app.kafka.topics.group-id}"
+            groupId = "${app.kafka.topics.group-id}",
+            containerFactory = "smsListenerContainerFactory"
 
             // 노션에 적힌 아래 방법은 에러가 떠서 바꿈
             // A component required a bean named 'kafkaTopicsProperties' that could not be found.
