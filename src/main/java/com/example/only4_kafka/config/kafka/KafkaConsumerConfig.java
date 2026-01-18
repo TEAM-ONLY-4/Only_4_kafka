@@ -4,11 +4,12 @@ import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.constant.KafkaPropertiesConstant;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
-import com.example.only4_kafka.service.failure.SmsFailureHandler;
+import com.example.only4_kafka.service.email.SmsKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.TopicPartition;
+import com.example.only4_kafka.event.SmsSendRequestEvent;
+import com.example.only4_kafka.service.failure.SmsFailureHandler;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,6 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -29,8 +29,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Configuration
 public class KafkaConsumerConfig {
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     private final RetryProperties retryProperties;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private static final String BOOTSTRAP_SERVERS = "localhost:9092";
     private final SmsFailureHandler smsFailureHandler;
 
@@ -72,12 +73,13 @@ public class KafkaConsumerConfig {
     // @KafkaListener 실행하는 컨테이너 만드는 공장
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, EmailSendRequestEvent>
-            emailKafkaListenerContainerFactory(ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory) {
+            emailKafkaListenerContainerFactory(ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory,
+                                               DefaultErrorHandler emailErrorHandler) {
         // 위에서 만든 ConsumerFactory 연결 / Concurrent라서 멀티스레드 처리 가능
         ConcurrentKafkaListenerContainerFactory<String, EmailSendRequestEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(emailConsumerFactory);
-        factory.setCommonErrorHandler(emailErrorHandler());
+        factory.setCommonErrorHandler(emailErrorHandler);
         return factory;
     }
 
@@ -95,14 +97,22 @@ public class KafkaConsumerConfig {
 
     // 이메일 처리 실패 시 재시도 정책 (지수 백오프)
     @Bean
-    public DefaultErrorHandler emailErrorHandler() {
+    public DefaultErrorHandler emailErrorHandler(SmsKafkaProducer smsKafkaProducer) {
         int maxAttempts = retryProperties.emailMaxAttempts();
         ExponentialBackOffWithMaxRetries backOff = new ExponentialBackOffWithMaxRetries(maxAttempts - 1);
         backOff.setInitialInterval(retryProperties.initialIntervalMs());
         backOff.setMultiplier(retryProperties.multiplier());
         backOff.setMaxInterval(retryProperties.maxIntervalMs());
 
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(backOff);
+        // 최종 실패 시 SMS 발행하는 recoverer
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler((record, ex) -> {
+            log.error("이메일 최종 실패. SMS 발행 진행. topic={}, offset={}, error={}",
+                    record.topic(), record.offset(), ex.getMessage());
+
+            EmailSendRequestEvent emailEvent = (EmailSendRequestEvent) record.value();
+            SmsSendRequestEvent smsEvent = new SmsSendRequestEvent(emailEvent.memberId(), emailEvent.billId());
+            smsKafkaProducer.send(smsEvent);
+        }, backOff);
 
         errorHandler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.warn("이메일 처리 재시도. attempt={}, topic={}, offset={}",
@@ -133,5 +143,4 @@ public class KafkaConsumerConfig {
 
         return errorHandler;
     }
-
 }
