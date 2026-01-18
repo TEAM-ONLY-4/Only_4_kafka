@@ -45,5 +45,7 @@ public class EmailSendService {
                 event.memberId(), event.billId(), memberEmail);
         emailClient.send(memberEmail, htmlContent);
         log.info("Email send done. memberId={}, billId={}", event.memberId(), event.billId());
+
+        // 5. update bill status
     }
 }

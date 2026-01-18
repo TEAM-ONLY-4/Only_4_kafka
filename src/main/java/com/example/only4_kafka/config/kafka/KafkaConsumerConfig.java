@@ -3,6 +3,8 @@ package com.example.only4_kafka.config.kafka;
 import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.constant.KafkaPropertiesConstant;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
+import com.example.only4_kafka.event.SmsSendRequestEvent;
+import com.example.only4_kafka.service.email.SmsKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -71,12 +73,13 @@ public class KafkaConsumerConfig {
     // @KafkaListener 실행하는 컨테이너 만드는 공장
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, EmailSendRequestEvent>
-            emailKafkaListenerContainerFactory(ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory) {
+            emailKafkaListenerContainerFactory(ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory,
+                                               DefaultErrorHandler emailErrorHandler) {
         // 위에서 만든 ConsumerFactory 연결 / Concurrent라서 멀티스레드 처리 가능
         ConcurrentKafkaListenerContainerFactory<String, EmailSendRequestEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(emailConsumerFactory);
-        factory.setCommonErrorHandler(emailErrorHandler());
+        factory.setCommonErrorHandler(emailErrorHandler);
         return factory;
     }
 
@@ -94,14 +97,22 @@ public class KafkaConsumerConfig {
 
     // 이메일 처리 실패 시 재시도 정책 (지수 백오프)
     @Bean
-    public DefaultErrorHandler emailErrorHandler() {
+    public DefaultErrorHandler emailErrorHandler(SmsKafkaProducer smsKafkaProducer) {
         int maxAttempts = retryProperties.emailMaxAttempts();
         ExponentialBackOffWithMaxRetries backOff = new ExponentialBackOffWithMaxRetries(maxAttempts - 1);
         backOff.setInitialInterval(retryProperties.initialIntervalMs());
         backOff.setMultiplier(retryProperties.multiplier());
         backOff.setMaxInterval(retryProperties.maxIntervalMs());
 
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(backOff);
+        // 최종 실패 시 SMS 발행하는 recoverer
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler((record, ex) -> {
+            log.error("이메일 최종 실패. SMS 발행 진행. topic={}, offset={}, error={}",
+                    record.topic(), record.offset(), ex.getMessage());
+
+            EmailSendRequestEvent emailEvent = (EmailSendRequestEvent) record.value();
+            SmsSendRequestEvent smsEvent = new SmsSendRequestEvent(emailEvent.memberId(), emailEvent.billId());
+            smsKafkaProducer.send(smsEvent);
+        }, backOff);
 
         errorHandler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.warn("이메일 처리 재시도. attempt={}, topic={}, offset={}",
