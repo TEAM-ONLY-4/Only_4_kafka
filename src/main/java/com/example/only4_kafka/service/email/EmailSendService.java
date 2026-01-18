@@ -22,19 +22,28 @@ public class EmailSendService {
     private final EmailClient emailClient;
 
     public void send(EmailSendRequestEvent event) {
-        log.info("이메일 발송 요청. memberId={}, billId={}", event.memberId(), event.billId());
+        log.info("Email send requested. memberId={}, billId={}", event.memberId(), event.billId());
 
-        // 1. 데이터 조회
+        // 1. Data fetch
         EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(event.memberId(), event.billId());
+        log.info("Data fetch done. memberId={}, billId={}", event.memberId(), event.billId());
 
-        // 2. 템플릿용 DTO로 변환
+        // 2. Map to template DTO
+        log.info("Template DTO mapping start. memberId={}, billId={}", event.memberId(), event.billId());
         EmailInvoiceTemplateDto emailInvoiceTemplateDto = emailInvoiceMapper.toDto(emailInvoiceReadResult);
+        log.info("Template DTO mapping done. memberId={}, billId={}", event.memberId(), event.billId());
 
-        // 3. HTML 렌더링
+        // 3. Render HTML
+        log.info("HTML render start. memberId={}, billId={}", event.memberId(), event.billId());
         String htmlContent = emailTemplateRenderer.render(emailInvoiceTemplateDto);
+        log.info("HTML render done. memberId={}, billId={}, contentLength={}",
+                event.memberId(), event.billId(), htmlContent.length());
 
-        // 4. 이메일 발송
+        // 4. Send email
         String memberEmail = emailInvoiceReadResult.memberBill().memberEmail();
+        log.info("Email send start. memberId={}, billId={}, email={}",
+                event.memberId(), event.billId(), memberEmail);
         emailClient.send(memberEmail, htmlContent);
+        log.info("Email send done. memberId={}, billId={}", event.memberId(), event.billId());
     }
 }
