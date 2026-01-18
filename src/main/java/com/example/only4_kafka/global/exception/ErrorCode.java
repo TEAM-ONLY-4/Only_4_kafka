@@ -84,7 +84,9 @@ public enum ErrorCode {
 
     ARRAY_INDEX_OUT_OF_BOUNDS_ERROR(400, "B996", "Array Index Out of Bounds Error"),
 
-    SMS_SEND_FAILED(500, "S001", "SMS 발송에 실패했습니다.")
+    SMS_SEND_FAILED(500, "S001", "SMS 발송에 실패했습니다."),
+
+    EMAIL_SEND_FAILED(500, "E001", "이메일 발송에 실패했습니다.")
     ;
 
     /**

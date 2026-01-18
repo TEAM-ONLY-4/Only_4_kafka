@@ -1,6 +1,7 @@
 package com.example.only4_kafka.service.email;
 
 import com.example.only4_kafka.event.EmailSendRequestEvent;
+import com.example.only4_kafka.infrastructure.email.EmailClient;
 import com.example.only4_kafka.service.email.dto.EmailInvoiceTemplateDto;
 import com.example.only4_kafka.service.email.dto.EmailInvoiceReadResult;
 import com.example.only4_kafka.service.email.mapper.EmailInvoiceMapper;
@@ -18,9 +19,10 @@ public class EmailSendService {
     private final EmailInvoiceReader emailInvoiceReader;
     private final EmailInvoiceMapper emailInvoiceMapper;
     private final EmailTemplateRenderer emailTemplateRenderer;
+    private final EmailClient emailClient;
 
     public void send(EmailSendRequestEvent event) {
-        log.info("Received email send request. memberId={}, billId={}", event.memberId(), event.billId());
+        log.info("이메일 발송 요청. memberId={}, billId={}", event.memberId(), event.billId());
 
         // 1. 데이터 조회
         EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(event.memberId(), event.billId());
@@ -31,12 +33,8 @@ public class EmailSendService {
         // 3. HTML 렌더링
         String htmlContent = emailTemplateRenderer.render(emailInvoiceTemplateDto);
 
-        // 4. 이메일 발송 (시뮬레이션)
-        sendEmail(event, htmlContent);
-    }
-
-    private void sendEmail(EmailSendRequestEvent event, String htmlContent) {
-        log.info("[EMAIL SEND] memberId={}, billId={}, to={}, contentLength={}",
-                event.memberId(), event.billId(), "user@example.com", htmlContent.length());
+        // 4. 이메일 발송
+        String memberEmail = emailInvoiceReadResult.memberBill().memberEmail();
+        emailClient.send(memberEmail, htmlContent);
     }
 }

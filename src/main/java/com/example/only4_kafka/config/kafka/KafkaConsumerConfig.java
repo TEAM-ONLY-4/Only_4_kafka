@@ -1,7 +1,10 @@
 package com.example.only4_kafka.config.kafka;
 
+import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.constant.KafkaPropertiesConstant;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -10,13 +13,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
+@RequiredArgsConstructor
 @Configuration
 public class KafkaConsumerConfig {
+
+    private final RetryProperties retryProperties;
 
     // ConsumerFactory: 메시지를 어떻게 읽을지 설정
     @Bean
@@ -42,6 +51,27 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, EmailSendRequestEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(emailConsumerFactory);
+        factory.setCommonErrorHandler(emailErrorHandler());
         return factory;
     }
+
+    // 이메일 처리 실패 시 재시도 정책 (지수 백오프)
+    @Bean
+    public DefaultErrorHandler emailErrorHandler() {
+        int maxAttempts = retryProperties.emailMaxAttempts();
+        ExponentialBackOffWithMaxRetries backOff = new ExponentialBackOffWithMaxRetries(maxAttempts - 1);
+        backOff.setInitialInterval(retryProperties.initialIntervalMs());
+        backOff.setMultiplier(retryProperties.multiplier());
+        backOff.setMaxInterval(retryProperties.maxIntervalMs());
+
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(backOff);
+
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) ->
+                log.warn("이메일 처리 재시도. attempt={}, topic={}, offset={}",
+                        deliveryAttempt, record.topic(), record.offset())
+        );
+
+        return errorHandler;
+    }
+
 }
