@@ -33,7 +33,7 @@ public class SmsSendService {
         this.templateEngine = templateEngine;
     }
 
-    @Transactional
+
     public void processSms(SmsSendRequestEvent event) {
         // 1. event에서 memberId, billId 추출
         Long billId = event.billId();
@@ -65,6 +65,7 @@ public class SmsSendService {
     }
 
     // 질문) bill의 sendStatus vs bill_Notification의 sendStatus는 각각 어떤 용도인가?
+    @Transactional
     private void updateBillSendStatus(Long billId) {
         // 청구서 조회
         Bill bill = billRepository.findById(billId)
