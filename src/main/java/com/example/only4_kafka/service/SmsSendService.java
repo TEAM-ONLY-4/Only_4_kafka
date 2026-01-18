@@ -33,7 +33,7 @@ public class SmsSendService {
         this.templateEngine = templateEngine;
     }
 
-    @Transactional
+
     public void processSms(SmsSendRequestEvent event) {
         // 1. event에서 memberId, billId 추출
         Long billId = event.billId();
@@ -50,7 +50,7 @@ public class SmsSendService {
         }
 
         // 3. 필요한 정보 추출해 청구서 Dto 생성
-        SmsBillDto smsBillDto = billRepository.findSmsBillDtoById(billId)
+        SmsBillDto smsBillDto = billRepository.findSmsBillDtoById(billId, java.time.LocalDate.now())
                 .orElseThrow(() -> new IllegalArgumentException("해당 청구서가 없습니다."));
 
         // 4. Dto 기반으로 String Teplate 생성
@@ -65,6 +65,7 @@ public class SmsSendService {
     }
 
     // 질문) bill의 sendStatus vs bill_Notification의 sendStatus는 각각 어떤 용도인가?
+    @Transactional
     private void updateBillSendStatus(Long billId) {
         // 청구서 조회
         Bill bill = billRepository.findById(billId)

@@ -6,12 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Repository
 public interface BillRepository extends JpaRepository<Bill, Long> {
     @Query("""
-        SELECT SmsBillDto(
+        SELECT new com.example.only4_kafka.domain.bill_send.SmsBillDto(
             m.name,
             m.phoneNumber,
             m.doNotDisturbStartTime,
@@ -29,11 +30,11 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
             b.unpaidAmount,
             b.totalBilledAmount,
             b.vat,
-            CURRENT_DATE
+            :now
         )
         FROM Bill b
         JOIN b.member m
         WHERE b.id = :billId
     """)
-    Optional<SmsBillDto> findSmsBillDtoById(@Param("billId") Long billId);
+    Optional<SmsBillDto> findSmsBillDtoById(@Param("billId") Long billId, @Param("now") LocalDate now);
 }
