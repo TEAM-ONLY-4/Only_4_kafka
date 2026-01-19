@@ -75,13 +75,13 @@ public class SmsSendService {
         bill.changeSendStatus(BillSendStatus.SENT);
 
         // 청구서 발송 이력 조회
-        BillNotification notification = billNotificationRepository.findById(billId)
-                .orElseThrow(() -> new IllegalArgumentException("청구서 발송 이력이 없습니다."));
+//        BillNotification notification = billNotificationRepository.findById(billId)
+//                .orElseThrow(() -> new IllegalArgumentException("청구서 발송 이력이 없습니다."));
+//
+//        // 청구서 발송 이력 상태 변경
+//        notification.changeSendStatus(BillNotificationStatus.SENT);
 
-        // 청구서 발송 이력 상태 변경
-        notification.changeSendStatus(BillNotificationStatus.SENT);
-
-        log.info("청구서 발송 상태 업데이트 완료 (BillId: {}, Bill.sendStatus: {}, BillNotification.sendStatus: {})", billId, bill.getBillSendStatus(), notification.getSendStatus());
+        log.info("청구서 발송 상태 업데이트 완료 (BillId: {}, Bill.sendStatus: {})", billId, bill.getBillSendStatus()); // , notification.getSendStatus()
     }
 
     // 청구서 Dto -> SMS 텍스트로 변환
