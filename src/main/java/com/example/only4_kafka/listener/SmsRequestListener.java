@@ -2,7 +2,7 @@ package com.example.only4_kafka.listener;
 
 import com.example.only4_kafka.config.properties.KafkaTopicsProperties;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
-import com.example.only4_kafka.service.SmsSendService;
+import com.example.only4_kafka.service.sms.SmsSendService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
