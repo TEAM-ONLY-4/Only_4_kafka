@@ -2,11 +2,14 @@ package com.example.only4_kafka.service.email.mapper;
 
 import com.example.only4_kafka.constant.BillItemCategoryConstant;
 import com.example.only4_kafka.constant.EmailConstant;
+import com.example.only4_kafka.infrastructure.MemberDataDecryptor;
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
 import com.example.only4_kafka.repository.dto.RecentBillRow;
 import com.example.only4_kafka.service.email.dto.EmailInvoiceTemplateDto;
 import com.example.only4_kafka.service.email.dto.EmailInvoiceReadResult;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,10 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 // DB 조회 -> Template 매핑
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class EmailInvoiceMapper {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(EmailConstant.DATE_FORMAT);
+
+    private final MemberDataDecryptor memberDataDecryptor;
 
     public EmailInvoiceTemplateDto toDto(EmailInvoiceReadResult emailInvoiceReadResult) {
         EmailInvoiceMemberBillRow memberBill = emailInvoiceReadResult.memberBill();
@@ -56,12 +63,15 @@ public class EmailInvoiceMapper {
         // 최근 4개월 매핑
         List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = mapRecentMonths(recentBillRowList);
 
+        // 민감정보 복호화
+        String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(memberBill.memberPhoneNumber());
+        log.info("3-1) 복호화 휴대전화. decryptedPhoneNumber={}", decryptedPhoneNumber);
         return new EmailInvoiceTemplateDto(
                 // 기본 정보
                 memberBill.billingYearMonth().getYear(),
                 memberBill.billingYearMonth().getMonthValue(),
                 memberBill.memberName(),
-                memberBill.memberPhoneNumber(),
+                decryptedPhoneNumber,
                 memberBill.memberGrade(),
                 memberBill.memberAddress(),
 
