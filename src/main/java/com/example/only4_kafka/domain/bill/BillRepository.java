@@ -22,14 +22,37 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
             b.paymentNameSnapshot,
             b.paymentNumberSnapshot,
             b.dueDate,
-
+            
             b.id,
             b.billingYearMonth,
             b.totalAmount,
             b.totalDiscountAmount,
             b.unpaidAmount,
             b.totalBilledAmount,
+            
+            (
+                SELECT COALESCE(SUM(bi.amount), 0)
+                FROM BillItem bi
+                WHERE bi.bill.id = b.id
+                  AND bi.itemCategory = 'SUBSCRIPTION'
+            ),
+            
+            (
+                SELECT COALESCE(SUM(bi.amount), 0)
+                FROM BillItem bi
+                WHERE bi.bill.id = b.id
+                  AND bi.itemCategory = 'OVER_USAGE'
+            ),
+            
+            (
+                SELECT COALESCE(SUM(bi.amount), 0)
+                FROM BillItem bi
+                WHERE bi.bill.id = b.id
+                  AND bi.itemCategory = 'ONE_TIME_PURCHASE'
+            ),
+            
             b.vat,
+            
             :now
         )
         FROM Bill b

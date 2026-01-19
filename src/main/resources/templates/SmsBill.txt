@@ -12,12 +12,14 @@ LG U+ 모바일명세서
 
 [당월요금]      [[${#numbers.formatInteger(invoice.totalBilledAmount, 0, 'COMMA')}]] 원
 이용금액        [[${#numbers.formatInteger(invoice.totalAmount, 0, 'COMMA')}]] 원
+미납요금      [[${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')}]] 원
+부가가치세      [[${#numbers.formatInteger(invoice.vat, 0, 'COMMA')}]] 원
 할인금액       -[[${#numbers.formatInteger(invoice.totalDiscountAmount, 0, 'COMMA')}]] 원
-[미납요금]      [[${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')}]] 원
 
 [당월요금] 상세내역
-기본사용료      [[${#numbers.formatInteger(invoice.totalAmount, 0, 'COMMA')}]] 원
-부가가치세      [[${#numbers.formatInteger(invoice.vat, 0, 'COMMA')}]] 원
+월정액      [[${#numbers.formatInteger(invoice.totalMonthlyAmount, 0, 'COMMA')}]] 원
+초과 사용료      [[${#numbers.formatInteger(invoice.totalOverageAmount, 0, 'COMMA')}]] 원
+소액 결제      [[${#numbers.formatInteger(invoice.totalMicroAmount, 0, 'COMMA')}]] 원
 
 납부정보
 납부자명        [[${invoice.paymentOwnerName}]]

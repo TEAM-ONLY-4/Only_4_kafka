@@ -55,6 +55,8 @@ public class SmsSendService {
         // 4. Dto 기반으로 String Teplate 생성
         String smsBillContent = getSmsBillContent(smsBillDto);
 
+        log.info("[SMS 청구서]\n {}", smsBillContent);
+
         // 4. SMS 발송 (전화번호, 청구서id, 내용)
         smsClient.send(smsBillDto.phoneNumber(), smsBillDto.billId(), smsBillContent);
 

@@ -26,6 +26,9 @@ public record SmsBillDto(
         BigDecimal totalDiscountAmount, // 총 할인 금액
         BigDecimal unpaidAmount, // 미납금
         BigDecimal totalBilledAmount, // 총 청구 금액 (실제 납부)
+        BigDecimal totalMonthlyAmount, // 월정액
+        BigDecimal totalOverageAmount, // 초과 사용료
+        BigDecimal totalMicroAmount, // 소액 결제
         BigDecimal vat, // 부가가치세
         LocalDate createdDate // 작성 일자
 ) {
