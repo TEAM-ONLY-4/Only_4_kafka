@@ -2,6 +2,9 @@ spring:
   profiles:
     active: local # 기본 모드 설정
 
+  application:
+    name: only4-kafka
+
   # [공통] DB 드라이버 & JPA 설정
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -40,3 +43,43 @@ app: # 커스텀 설정 루트(prefix)
       initial-interval-ms: 1000 # 백오프(재시도 간격)의 시작값 / 1초 후 첫 재시도
       multiplier: 2.0 # 지수 백오프 배율
       max-interval-ms: 30000 # 재시도 간격 상한 / 아무리 커져도 30초를 넘지 않음
+
+# ==========================================
+# [모니터링 & 액추에이터 핵심 설정]
+# ==========================================
+management:
+  # 1. 엔드포인트 노출 (개발용 추천 세팅)
+  endpoints:
+    web:
+      exposure:
+        # prometheus: 모니터링 필수
+        # health, info: 서버 상태 확인
+        # loggers: 실행 중 로그 레벨 변경 (디버깅용)
+        # threaddump: 스레드 상태 확인 (컨슈머 멈춤 분석용)
+        # heapdump: JVM 힙 덤프 생성해 메모리 사용 상태 확인
+        # beans: 빈 등록 확인
+        include: prometheus, health, info, metrics, loggers, threaddump, heapdump
+
+  # 2. 프로메테우스 연동 활성화
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always # 헬스 체크 시 디스크/DB 등 상세 사유 표시
+
+  # 3. 메트릭 수집 상세 설정
+  metrics:
+    tags:
+      application: ${spring.application.name} # 모든 데이터에 태그 붙이기
+
+    # 지연 시간(Latency) 분포 수집 (HTTP 요청이 있거나 추후 확장 대비)
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+    # 각 컴포넌트별 메트릭 수집 활성화
+    enable:
+      jvm: true        # 자바 메모리, GC 정보 (필수)
+      process: true    # CPU 사용량, 스레드 개수 (필수)
+      system: true     # 시스템 가동 시간 등
+      kafka: true      # ★ 카프카 컨슈머 지표 (Lag, 처리량 등)
