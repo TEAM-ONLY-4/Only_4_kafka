@@ -1,30 +1,29 @@
 LG U+ 모바일명세서
-[[(${invoice.billingYear})]]년 [[(${invoice.billingMonth})]]월
+[[${#temporals.format(invoice.billingYearMonth, 'yyyy')}]]년 [[${#temporals.format(invoice.billingYearMonth, 'M')}]]월
 
-고객명         [[(${invoice.customerName})]]
+고객명         [[${invoice.name}]]
 모바일 서비스번호
-               [[(${invoice.phoneNumber})]]
-명세서번호     [[(${invoice.invoiceNumber})]]
-이용기간       [[(${invoice.usagePeriod})]]
-작성일자       [[(${invoice.issueDate})]]
+               [[${invoice.phoneNumber}]]
+명세서번호     [[${invoice.billId}]]
+청구월         [[${#temporals.format(invoice.billingYearMonth, 'yyyy-MM')}]]
+작성일자       [[${invoice.createdDate}]]
 
-납부하실 금액   [[(${#numbers.formatInteger(invoice.totalPayment, 0, 'COMMA')})]] 원
+납부하실 금액   [[${#numbers.formatInteger(invoice.totalBilledAmount, 0, 'COMMA')}]] 원
 
-[당월요금]      [[(${#numbers.formatInteger(invoice.totalPayment, 0, 'COMMA')})]] 원
-이용금액        [[(${#numbers.formatInteger(invoice.usageAmount, 0, 'COMMA')})]] 원
-할인금액       -[[(${#numbers.formatInteger(invoice.discountAmount, 0, 'COMMA')})]] 원
-[미납요금]           [[(${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')})]] 원
+[당월요금]      [[${#numbers.formatInteger(invoice.totalBilledAmount, 0, 'COMMA')}]] 원
+이용금액        [[${#numbers.formatInteger(invoice.totalAmount, 0, 'COMMA')}]] 원
+할인금액       -[[${#numbers.formatInteger(invoice.totalDiscountAmount, 0, 'COMMA')}]] 원
+[미납요금]      [[${#numbers.formatInteger(invoice.unpaidAmount, 0, 'COMMA')}]] 원
 
 [당월요금] 상세내역
-월정액          [[(${#numbers.formatInteger(invoice.monthlyFee, 0, 'COMMA')})]] 원
-10원미만할인요금    -[[(${#numbers.formatInteger(invoice.roundingDiscount, 0, 'COMMA')})]] 원
-부가가치세       [[(${#numbers.formatInteger(invoice.vat, 0, 'COMMA')})]] 원
+기본사용료      [[${#numbers.formatInteger(invoice.totalAmount, 0, 'COMMA')}]] 원
+부가가치세      [[${#numbers.formatInteger(invoice.vat, 0, 'COMMA')}]] 원
 
 납부정보
-[[(${invoice.paymentType == 'CARD' ? '카드주' : '예금주'})]]          [[(${invoice.paymentHolder})]]
-[[(${invoice.paymentType == 'CARD' ? '카드명' : '은행명'})]]          [[(${invoice.paymentName})]]
-[[(${invoice.paymentType == 'CARD' ? '카드번호' : '계좌번호'})]]        [[(${invoice.paymentNumber})]]
-납기일          [[(${invoice.dueDate})]]
+납부자명        [[${invoice.paymentOwnerName}]]
+납부기관        [[${invoice.paymentName}]]
+납부번호        [[${invoice.paymentNumber}]]
+납기일          [[${invoice.dueDate}]]
 
 명세서 작성일자 이후 납부하신 요금은
 [납부하실 금액]에 반영되지 않을 수
