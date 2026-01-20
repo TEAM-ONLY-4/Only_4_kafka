@@ -108,10 +108,11 @@ public class EmailInvoiceMapper {
         );
     }
 
-    // 최근 4개월 변환
+    // 최근 4개월 변환 (항상 4개 보장, 오래된 순 정렬)
     private List<EmailInvoiceTemplateDto.RecentMonth> mapRecentMonths(List<RecentBillRow> recentBillRowList) {
         List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = new ArrayList<>();
 
+        // DB 조회 결과 변환 (DESC 정렬되어 있음)
         for (RecentBillRow recentBillRow : recentBillRowList) {
             recentMonthList.add(new EmailInvoiceTemplateDto.RecentMonth(
                     formatYearMonth(recentBillRow.billingYearMonth()),
@@ -124,7 +125,28 @@ public class EmailInvoiceMapper {
             ));
         }
 
+        // 4개 미만이면 빈 데이터로 채우기 (템플릿에서 인덱스 접근 시 에러 방지)
+        while (recentMonthList.size() < EmailConstant.RECENT_MONTHS_COUNT) {
+            recentMonthList.add(createEmptyRecentMonth());
+        }
+
+        // 오래된 순으로 정렬 (DB는 DESC, 템플릿은 ASC 필요)
+        java.util.Collections.reverse(recentMonthList);
+
         return recentMonthList;
+    }
+
+    // 빈 RecentMonth 생성 (데이터 없을 때 기본값)
+    private EmailInvoiceTemplateDto.RecentMonth createEmptyRecentMonth() {
+        return new EmailInvoiceTemplateDto.RecentMonth(
+                "-",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
+        );
     }
 
     // 청구서 번호 생성
