@@ -41,6 +41,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+    // Bouncy Castle (PGP 복호화용)
+    implementation 'org.bouncycastle:bcpg-jdk18on:1.78.1'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
+
     // Actuator & Prometheus
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
