@@ -1,5 +1,8 @@
 package com.example.only4_kafka.repository;
 
+import com.example.only4_kafka.domain.bill_notification.BillChannel;
+import com.example.only4_kafka.domain.bill_notification.SendStatus;
+import com.example.only4_kafka.repository.dto.BillNotificationRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
 import com.example.only4_kafka.repository.dto.RecentBillRow;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +101,24 @@ public class InvoiceQueryRepository {
         );
     }
 
+    // billNotification 가져오기
+    public Optional<BillNotificationRow> findBillNotification(Long billId) {
+        return jdbcTemplate.query(
+                """
+                SELECT
+                    member_id,
+                    bill_id,
+                    channel,
+                    send_status,
+                    process_start_time
+                FROM bill_notification
+                WHERE bill_id = ?
+                """,
+                this::mapBillNotificationRow,
+                billId
+        ).stream().findFirst();
+    }
+
     private RecentBillRow mapRecentBillRow(ResultSet rs, int rowNum) throws SQLException {
         return new RecentBillRow(
                 rs.getObject("billing_year_month", LocalDate.class),
@@ -140,6 +162,18 @@ public class InvoiceQueryRepository {
                 rs.getString("item_name"),
                 rs.getBigDecimal("amount"),
                 rs.getString("detail_snapshot")
+        );
+    }
+
+    // BillNotification -> BillNotificationRow DTO 매핑
+    private BillNotificationRow mapBillNotificationRow(ResultSet rs, int rowNum) throws SQLException {
+        return new BillNotificationRow(
+                rs.getLong("member_id"),
+                rs.getLong("bill_id"),
+                // DB의 문자열(VARCHAR/ENUM)을 자바 Enum으로 변환
+                BillChannel.valueOf(rs.getString("channel")),
+                SendStatus.valueOf(rs.getString("send_status")),
+                rs.getObject("process_start_time", LocalDateTime.class)
         );
     }
 

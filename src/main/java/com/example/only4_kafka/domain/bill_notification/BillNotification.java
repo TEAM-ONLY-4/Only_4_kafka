@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -45,7 +47,14 @@ public class BillNotification extends BaseEntity {
     @Column(name = "send_status", nullable = false, columnDefinition = "send_status_enum")
     private SendStatus sendStatus;
 
+    @Column(name = "process_start_time", nullable = false) // nullable이 맞는지?
+    private LocalDateTime processStartTime;
+
     public void changeSendStatus(SendStatus sendStatus) {
         this.sendStatus = sendStatus;
+    }
+
+    public void changeProcessStartTime(LocalDateTime processStartTime) {
+        this.processStartTime = processStartTime;
     }
 }

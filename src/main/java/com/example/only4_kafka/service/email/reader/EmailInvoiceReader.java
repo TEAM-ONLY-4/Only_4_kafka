@@ -2,6 +2,7 @@ package com.example.only4_kafka.service.email.reader;
 
 import com.example.only4_kafka.constant.EmailConstant;
 import com.example.only4_kafka.repository.InvoiceQueryRepository;
+import com.example.only4_kafka.repository.dto.BillNotificationRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceItemRow;
 import com.example.only4_kafka.repository.dto.EmailInvoiceMemberBillRow;
 import com.example.only4_kafka.repository.dto.RecentBillRow;
@@ -20,6 +21,10 @@ public class EmailInvoiceReader {
 
     @Transactional(readOnly = true)
     public EmailInvoiceReadResult read(Long memberId, Long billId) {
+        // 청구서의 billNotification 가져오기
+        BillNotificationRow billNotification = queryRepository.findBillNotification(billId)
+                .orElseThrow(() -> new IllegalArgumentException("BillNotification not found."));
+
         EmailInvoiceMemberBillRow memberBill = queryRepository.findMemberBill(memberId, billId)
                 .orElseThrow(() -> new IllegalArgumentException("Member/Bill not found."));
 
@@ -31,7 +36,7 @@ public class EmailInvoiceReader {
                 EmailConstant.RECENT_MONTHS_COUNT
         );
 
-        return new EmailInvoiceReadResult(memberId, billId, memberBill, itemRowList, recentBillList);
+        return new EmailInvoiceReadResult(memberId, billId, memberBill, itemRowList, recentBillList, billNotification);
     }
 
 }
