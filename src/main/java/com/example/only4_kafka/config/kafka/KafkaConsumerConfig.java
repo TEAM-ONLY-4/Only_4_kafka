@@ -39,14 +39,19 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory(KafkaProperties kafkaProperties) {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties()); // yml에 적은 kafka 설정들 가져옴 (bootstrap-servers, group-id 등)
+
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // 메시지 항상 처음부터 읽음 (데이터 유실 방지)
+
         // 메시지 변환 방식 지정
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // 오프셋 자동 커밋 비활성화
 
         // 보안 설정 / JSON을 아무 클래스로나 변환하면 위험 / 해당 패키지 클래스만 허용 지정
         JsonDeserializer<EmailSendRequestEvent> valueDeserializer =
                 new JsonDeserializer<>(EmailSendRequestEvent.class);
-        valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACAKGE);
+        valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACKAGE);
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), valueDeserializer); // 설정 다 모아서 Factory 생성
     }
@@ -65,7 +70,7 @@ public class KafkaConsumerConfig {
         // 보안 설정 / JSON을 아무 클래스로나 변환하면 위험 / 해당 패키지 클래스만 허용 지정
         JsonDeserializer<SmsSendRequestEvent> valueDeserializer =
                 new JsonDeserializer<>(SmsSendRequestEvent.class);
-        valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACAKGE);
+        valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACKAGE);
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), valueDeserializer); // 설정 다 모아서 Factory 생성
     }
