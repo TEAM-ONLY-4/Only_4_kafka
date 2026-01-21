@@ -38,8 +38,8 @@ app: # 커스텀 설정 루트(prefix)
       dlt: notification.dlt
 
     retry: # 재시도 관련 설정을 묶는 구역
-      email-max-attempts: 3
-      sms-max-attempts: 3
+      email-max-attempts: 2
+      sms-max-attempts: 2
       initial-interval-ms: 1000 # 백오프(재시도 간격)의 시작값 / 1초 후 첫 재시도
       multiplier: 2.0 # 지수 백오프 배율
       max-interval-ms: 30000 # 재시도 간격 상한 / 아무리 커져도 30초를 넘지 않음
