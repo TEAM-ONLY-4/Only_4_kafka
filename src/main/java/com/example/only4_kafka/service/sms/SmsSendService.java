@@ -2,7 +2,7 @@ package com.example.only4_kafka.service.sms;
 
 import com.example.only4_kafka.domain.bill.BillRepository;
 import com.example.only4_kafka.domain.bill_notification.BillNotificationRepository;
-import com.example.only4_kafka.domain.bill_notification.BillNotificationStatus;
+import com.example.only4_kafka.domain.bill_notification.SendStatus;
 import com.example.only4_kafka.domain.bill_send.SmsBillDto;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
 import com.example.only4_kafka.infrastructure.sms.SmsClient;
@@ -39,7 +39,7 @@ public class SmsSendService {
 
         // 2. 이미 해당 청구서가 발송되었는지 확인
         // 문제점 : '아직 발송중'인 경우 체킹 가능? => 발송은 했으나 도착 여부는 모를 때
-        boolean isAlreadySent = billNotificationRepository.existsByBillIdAndSendStatus(billId, BillNotificationStatus.SENT);
+        boolean isAlreadySent = billNotificationRepository.existsByBillIdAndSendStatus(billId, SendStatus.SENT);
 
         if(isAlreadySent) {
             log.info("[중복 방지] 이미 발송 완료된 청구서입니다. (BillId: {})", billId);
