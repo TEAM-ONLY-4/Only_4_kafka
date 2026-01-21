@@ -32,6 +32,7 @@ public class KafkaRetryConfig {
                 .fixedBackOff(retryProperties.initialIntervalMs())
                 .maxAttempts(retryProperties.emailMaxAttempts())
                 .setTopicSuffixingStrategy(TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE)
+                .autoCreateTopicsWith(8, (short) 1) // 만들어지는 토픽도 파티션 8개, 복제본 1개
                 .doNotConfigureDlt() // DLT 토픽 생성 끄기
                 .dltHandlerMethod("emailFallbackRecoverer", "accept")
                 .includeTopic(emailTopicName)
@@ -46,6 +47,7 @@ public class KafkaRetryConfig {
                 .fixedBackOff(retryProperties.initialIntervalMs())
                 .maxAttempts(retryProperties.smsMaxAttempts())
                 .setTopicSuffixingStrategy(TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE)
+                .autoCreateTopicsWith(8, (short) 1) // 만들어지는 토픽도 파티션 8개, 복제본 1개
                 .includeTopic(smsTopicName)
                 .create(template);
     }

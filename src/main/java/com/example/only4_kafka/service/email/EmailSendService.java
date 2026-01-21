@@ -54,7 +54,7 @@ public class EmailSendService {
         String htmlContent = emailTemplateRenderer.render(emailInvoiceTemplateDto);
         log.info("6) HTML 렌더링 완료. memberId={}, billId={}, contentLength={}",
                 event.memberId(), event.billId(), htmlContent.length());
-        log.info("6-1) HTML 청구서 결과 \n {}", htmlContent);
+//        log.info("6-1) HTML 청구서 결과 \n {}", htmlContent);
 
         // 4. update bill status
         billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.EMAIL, SendStatus.SENT, null);

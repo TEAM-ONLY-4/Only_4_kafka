@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
@@ -44,6 +44,11 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "500");
+        props.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, "102400");
+        // 기본값 5분(300000) -> 10분(600000) 정도로 넉넉하게
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "600000");
+
         JsonDeserializer<EmailSendRequestEvent> valueDeserializer = new JsonDeserializer<>(EmailSendRequestEvent.class);
         valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACKAGE);
 
@@ -59,6 +64,11 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "500");
+        props.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, "102400");
+        // 기본값 5분(300000) -> 10분(600000) 정도로 넉넉하게
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "600000");
 
         JsonDeserializer<SmsSendRequestEvent> valueDeserializer = new JsonDeserializer<>(SmsSendRequestEvent.class);
         valueDeserializer.addTrustedPackages(KafkaPropertiesConstant.EVENT_PACKAGE);
@@ -76,7 +86,14 @@ public class KafkaConsumerConfig {
 
         // 2. 메서드 호출 시 kafkaProperties 전달
         factory.setConsumerFactory(emailConsumerFactory(kafkaProperties));
-        factory.setConcurrency(3);
+        factory.setConcurrency(8);
+
+        // [성능 튜닝 4] AckMode 설정 (중요!)
+        // ENABLE_AUTO_COMMIT=false이므로, 리스너가 정상 종료되면 커밋하도록 설정
+        // MANUAL_IMMEDIATE: Acknowledgment.acknowledge() 호출 시 즉시 커밋 (안전성 높음)
+        // BATCH: poll() 한 뭉텅이 처리가 다 끝나면 한 번에 커밋 (속도 빠름, 실패 시 중복 처리 범위 넓어짐)
+        // 이메일 중복 발송 방지가 중요하다면 MANUAL_IMMEDIATE, 속도가 최우선이면 BATCH
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
 
         return factory;
     }
@@ -89,7 +106,14 @@ public class KafkaConsumerConfig {
 
         // 2. 메서드 호출 시 kafkaProperties 전달
         factory.setConsumerFactory(smsConsumerFactory(kafkaProperties));
-        factory.setConcurrency(3);
+        factory.setConcurrency(8);
+
+        // [성능 튜닝 4] AckMode 설정 (중요!)
+        // ENABLE_AUTO_COMMIT=false이므로, 리스너가 정상 종료되면 커밋하도록 설정
+        // MANUAL_IMMEDIATE: Acknowledgment.acknowledge() 호출 시 즉시 커밋 (안전성 높음)
+        // BATCH: poll() 한 뭉텅이 처리가 다 끝나면 한 번에 커밋 (속도 빠름, 실패 시 중복 처리 범위 넓어짐)
+        // 이메일 중복 발송 방지가 중요하다면 MANUAL_IMMEDIATE, 속도가 최우선이면 BATCH
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
 
         return factory;
     }
