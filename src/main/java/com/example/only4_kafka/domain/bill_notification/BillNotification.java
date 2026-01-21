@@ -22,6 +22,10 @@ public class BillNotification extends BaseEntity {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+    // 알림 대상자 ID (성능을 위해 반정규화 or 직접 참조)
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "bill_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_bill_notification_to_bill"))
@@ -56,5 +60,9 @@ public class BillNotification extends BaseEntity {
 
     public void changeProcessStartTime(LocalDateTime processStartTime) {
         this.processStartTime = processStartTime;
+    }
+
+    public void changeBillChannel(BillChannel channel) {
+        this.channel = channel;
     }
 }

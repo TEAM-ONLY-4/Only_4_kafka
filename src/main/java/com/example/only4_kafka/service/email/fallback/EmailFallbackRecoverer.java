@@ -3,7 +3,7 @@ package com.example.only4_kafka.service.email.fallback;
 import com.example.only4_kafka.domain.bill_notification.BillNotificationRepository;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
-import com.example.only4_kafka.service.email.SmsKafkaProducer;
+import com.example.only4_kafka.service.sms.SmsKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

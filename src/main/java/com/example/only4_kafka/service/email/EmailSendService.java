@@ -1,5 +1,6 @@
 package com.example.only4_kafka.service.email;
 
+import com.example.only4_kafka.domain.bill_notification.BillChannel;
 import com.example.only4_kafka.domain.bill_notification.SendStatus;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.infrastructure.MemberDataDecryptor;
@@ -56,7 +57,7 @@ public class EmailSendService {
         log.info("6-1) HTML 청구서 결과 \n {}", htmlContent);
 
         // 4. update bill status
-        billNotificationWriter.updateBillNotificationSendStatus(event.billId(), SendStatus.SENT, null);
+        billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.EMAIL, SendStatus.SENT, null);
 
         // 5. Send email
         String encryptedEmail = emailInvoiceReadResult.memberBill().memberEmail();
@@ -72,7 +73,7 @@ public class EmailSendService {
     private boolean checkBillNotification(BillNotificationRow billNotification) {
         // 정상 흐름 & SENT인 채로 재시도 흐름 : SENDING & 선점 시각 현재로
         if(billNotification.sendStatus() == SendStatus.PENDING || billNotification.sendStatus() == SendStatus.SENT) {
-            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), SendStatus.SENDING, LocalDateTime.now());
+            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.EMAIL, SendStatus.SENDING, LocalDateTime.now());
             return true;
         }
 

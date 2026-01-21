@@ -3,6 +3,7 @@ package com.example.only4_kafka.service;
 import com.example.only4_kafka.domain.bill.Bill;
 import com.example.only4_kafka.domain.bill.BillRepository;
 import com.example.only4_kafka.domain.bill.BillSendStatus;
+import com.example.only4_kafka.domain.bill_notification.BillChannel;
 import com.example.only4_kafka.domain.bill_notification.BillNotification;
 import com.example.only4_kafka.domain.bill_notification.BillNotificationRepository;
 import com.example.only4_kafka.domain.bill_notification.SendStatus;
@@ -20,10 +21,13 @@ public class BillNotificationWriter {
     private final BillNotificationRepository billNotificationRepository;
 
     @Transactional
-    public void updateBillNotificationSendStatus(Long billId, SendStatus sendStatus, LocalDateTime processStartTime) {
+    public void updateBillNotificationSendStatus(Long billId, BillChannel channel, SendStatus sendStatus, LocalDateTime processStartTime) {
         // BillNotificationRow
         BillNotification notification = billNotificationRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("BillNotificationRow not found"));
+
+        // 청구서 발송 채널 변경
+        notification.changeBillChannel(channel);
 
         // 청구서 발송 이력 상태 변경
         notification.changeSendStatus(sendStatus);
