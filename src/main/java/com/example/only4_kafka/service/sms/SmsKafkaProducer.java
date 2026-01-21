@@ -1,4 +1,4 @@
-package com.example.only4_kafka.service.email;
+package com.example.only4_kafka.service.sms;
 
 import com.example.only4_kafka.config.properties.KafkaTopicsProperties;
 import com.example.only4_kafka.event.SmsSendRequestEvent;

@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,6 +22,10 @@ public class BillNotification extends BaseEntity {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+    // 알림 대상자 ID (성능을 위해 반정규화 or 직접 참조)
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "bill_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_bill_notification_to_bill"))
@@ -30,12 +36,33 @@ public class BillNotification extends BaseEntity {
     @Column(name = "channel", nullable = false, columnDefinition = "bill_channel_enum")
     private BillChannel channel;
 
+//    @Enumerated(EnumType.STRING)
+//    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+//    @Column(name = "send_status", nullable = false, columnDefinition = "bill_notification_status_enum")
+//    private SendStatus sendStatus;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "send_status", nullable = false, columnDefinition = "bill_notification_status_enum")
-    private BillNotificationStatus sendStatus;
+    @Column(name = "publish_status", nullable = false, columnDefinition = "publish_status_enum")
+    private PublishStatus publishStatus;
 
-    public void changeSendStatus(BillNotificationStatus sendStatus) {
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "send_status", nullable = false, columnDefinition = "send_status_enum")
+    private SendStatus sendStatus;
+
+    @Column(name = "process_start_time", nullable = false) // nullable이 맞는지?
+    private LocalDateTime processStartTime;
+
+    public void changeSendStatus(SendStatus sendStatus) {
         this.sendStatus = sendStatus;
+    }
+
+    public void changeProcessStartTime(LocalDateTime processStartTime) {
+        this.processStartTime = processStartTime;
+    }
+
+    public void changeBillChannel(BillChannel channel) {
+        this.channel = channel;
     }
 }

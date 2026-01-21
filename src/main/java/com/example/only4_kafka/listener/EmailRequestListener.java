@@ -2,6 +2,7 @@ package com.example.only4_kafka.listener;
 
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.service.email.EmailSendService;
+import com.example.only4_kafka.service.sms.SmsKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;

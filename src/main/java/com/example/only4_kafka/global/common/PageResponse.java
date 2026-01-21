@@ -15,6 +15,7 @@ public class PageResponse {
 
     private PageInfo pageInfo;
 
+    @Builder.Default
     private List<?> dataList = new ArrayList<>();
 
     public static PageResponse toPageResponse(PageInfo pageInfo, List<?> dataList) {

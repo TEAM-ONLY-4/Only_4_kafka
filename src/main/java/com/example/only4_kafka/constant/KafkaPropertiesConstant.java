@@ -5,5 +5,5 @@ public class KafkaPropertiesConstant {
     private KafkaPropertiesConstant() {
     }
 
-    public static final String EVENT_PACAKGE = "com.example.only4_kafka.event";
+    public static final String EVENT_PACKAGE = "com.example.only4_kafka.event";
 }

@@ -1,5 +1,5 @@
 package com.example.only4_kafka.domain.bill_notification;
 
-public enum BillNotificationStatus {
-    READY, SENT, FAILED
+public enum SendStatus {
+    PENDING, SENDING, SENT, FAILED
 }
