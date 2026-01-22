@@ -121,6 +121,22 @@ public class InvoiceQueryRepository {
         ).stream().findFirst();
     }
 
+    public int updateBillNotification(Long billId, BillChannel channel, SendStatus sendStatus, LocalDateTime processStartTime) {
+        return jdbcTemplate.update(
+                """
+                UPDATE bill_notification
+                SET channel = ?::bill_channel_enum,
+                    send_status = ?::send_status_enum,
+                    process_start_time = COALESCE(?, process_start_time)
+                WHERE bill_id = ?
+                """,
+                channel.name(),
+                sendStatus.name(),
+                processStartTime,
+                billId
+        );
+    }
+
     private RecentBillRow mapRecentBillRow(ResultSet rs, int rowNum) throws SQLException {
         return new RecentBillRow(
                 rs.getObject("billing_year_month", LocalDate.class),

@@ -21,9 +21,10 @@ public class TestController {
 
     private final EmailKafkaProducer emailKafkaProducer;
 
+    // n명 email producer 테스트
     @GetMapping("/email/bulk")
     public ResponseEntity<SuccessResponse<String>> sendBulkEmail() {
-        IntStream.range(0, 1000).forEach(i -> {
+        IntStream.range(0, 20).forEach(i -> {
             EmailSendRequestEvent event = EmailSendRequestEvent.builder()
                     .memberId((long) (i + 1))
                     .billId((long) (i + 1000 + 1))
