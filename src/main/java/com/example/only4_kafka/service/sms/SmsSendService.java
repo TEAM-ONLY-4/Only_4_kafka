@@ -1,5 +1,6 @@
 package com.example.only4_kafka.service.sms;
 
+import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.domain.bill_notification.BillChannel;
 import com.example.only4_kafka.domain.bill_notification.SendStatus;
 import com.example.only4_kafka.domain.bill_send.SmsBillDto;
@@ -28,6 +29,7 @@ public class SmsSendService {
     private final SmsTemplateRenderer smsTemplateRenderer;
     private final SmsClient smsClient;
     private final BillNotificationWriter billNotificationWriter;
+    private final RetryProperties retryProperties; // 재시도 BackOff 시간 가져오기 위해 사용
 
     public void send(SmsSendRequestEvent event) {
         log.info("1) SMS 전송 요청. memberId={}, billId={}", event.memberId(), event.billId());
@@ -66,7 +68,7 @@ public class SmsSendService {
     // BillNotification 상태 확인 후 발송 상태, processStartTime 업데이트
     private boolean checkBillNotification(BillNotificationRow billNotification) {
         // 정상 흐름 & SENT인 채로 재시도 흐름 : SENDING & 선점 시각 현재로
-        if(billNotification.sendStatus() == SendStatus.SENT) {
+        if(billNotification.sendStatus() == SendStatus.PENDING || billNotification.sendStatus() == SendStatus.SENT) {
             billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.SMS, SendStatus.SENDING, LocalDateTime.now());
             return true;
         }
@@ -74,6 +76,7 @@ public class SmsSendService {
         // SENDING인 채로 재시도 흐름 : 아무 것도 하지 않고 그냥 넘김 (SENDING 인채로)
         else if(billNotification.sendStatus() == SendStatus.SENDING
                 && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= 10) {
+            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.SMS, SendStatus.SENDING, LocalDateTime.now());
             return true;
         }
 
