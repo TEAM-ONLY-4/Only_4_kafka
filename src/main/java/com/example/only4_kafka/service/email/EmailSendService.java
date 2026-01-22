@@ -1,5 +1,6 @@
 package com.example.only4_kafka.service.email;
 
+import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.domain.bill_notification.BillChannel;
 import com.example.only4_kafka.domain.bill_notification.SendStatus;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
@@ -30,6 +31,7 @@ public class EmailSendService {
     private final EmailClient emailClient;
     private final MemberDataDecryptor memberDataDecryptor;
     private final BillNotificationWriter billNotificationWriter; // billNotification 테이블에 업데이트
+    private final RetryProperties retryProperties; // 재시도 BackOff 시간 가져오기 위해 사용
 
     public void send(EmailSendRequestEvent event) {
         log.info("1) 이메일 전송 요청. memberId={}, billId={}", event.memberId(), event.billId());
@@ -74,12 +76,14 @@ public class EmailSendService {
         // 정상 흐름 & SENT인 채로 재시도 흐름 : SENDING & 선점 시각 현재로
         if(billNotification.sendStatus() == SendStatus.PENDING || billNotification.sendStatus() == SendStatus.SENT) {
             billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.EMAIL, SendStatus.SENDING, LocalDateTime.now());
+
             return true;
         }
 
-        // SENDING인 채로 재시도 흐름 : 아무 것도 하지 않고 그냥 넘김 (SENDING 인채로)
+        // SENDING인 채로 재시도 흐름 : SENDING & 선점 시각 현재로
         else if(billNotification.sendStatus() == SendStatus.SENDING
-                && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= 10) {
+                && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= retryProperties.initialIntervalMs()) {
+            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.EMAIL, SendStatus.SENDING, LocalDateTime.now());
             return true;
         }
 
