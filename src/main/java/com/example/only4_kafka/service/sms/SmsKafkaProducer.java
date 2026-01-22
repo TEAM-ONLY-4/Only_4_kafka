@@ -18,7 +18,7 @@ public class SmsKafkaProducer {
     public void send(SmsSendRequestEvent smsSendRequestEvent) {
         String topic = kafkaTopicsProperties.smsRequest();
 
-        kafkaTemplate.send(topic, smsSendRequestEvent)
+        kafkaTemplate.send(topic, String.valueOf(smsSendRequestEvent.billId()), smsSendRequestEvent)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.error("[SMS Producer] 발행 실패. topic={}, memberId={}, billId={}, error={}",

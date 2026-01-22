@@ -24,7 +24,7 @@ public class TestController {
     // n명 email producer 테스트
     @GetMapping("/email/bulk")
     public ResponseEntity<SuccessResponse<String>> sendBulkEmail() {
-        IntStream.range(0, 20).forEach(i -> {
+        IntStream.range(0, 1000).forEach(i -> {
             EmailSendRequestEvent event = EmailSendRequestEvent.builder()
                     .memberId((long) (i + 1))
                     .billId((long) (i + 1000 + 1))
@@ -33,5 +33,19 @@ public class TestController {
         });
 
         return SuccessResponse.of("1000 events published").asHttp(HttpStatus.OK);
+    }
+
+    @GetMapping("/retry-check")
+    public ResponseEntity<SuccessResponse<String>> sendRetryCheck() {
+        IntStream.range(1, 1001).forEach(i -> {
+            // memberId -999 triggers failure in EmailRequestListener
+            EmailSendRequestEvent event = EmailSendRequestEvent.builder()
+                    .memberId(-999L) 
+                    .billId((long) i)
+                    .build();
+            emailKafkaProducer.send(event);
+        });
+
+        return SuccessResponse.of("10 failure events published").asHttp(HttpStatus.OK);
     }
 }

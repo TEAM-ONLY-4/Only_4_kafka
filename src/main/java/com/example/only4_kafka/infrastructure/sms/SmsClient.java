@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 public class SmsClient {
     private final BillNotificationRepository billNotificationRepository;
-    private static final int SMS_FAILED_RATIO = 50;
+    private static final int SMS_FAILED_RATIO = 0;
 
     public void send(String phoneNumber, Long billId, String smsBillContent) {
         // SMS 발송 시도 : 일단 1% 확률로 실패 처리

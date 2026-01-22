@@ -53,7 +53,7 @@ public class SmsSendService {
         log.info("5) SMS 텍스트 렌더링 시작. memberId={}, billId={}", event.memberId(), event.billId());
         String smsContent = smsTemplateRenderer.render(smsBillDto);
         log.info("6) SMS 텍스트 렌더링 완료. memberId={}, billId={}, contentLength={}", event.memberId(), event.billId(), smsContent.length());
-        log.info("6-1) SMS 청구서 결과 \n {}", smsContent);
+        // log.info("6-1) SMS 청구서 결과 \n {}", smsContent);
 
         // 5. update bill status
         billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.SMS, SendStatus.SENT, null);
@@ -76,6 +76,7 @@ public class SmsSendService {
         // SENDING인 채로 재시도 흐름 : 아무 것도 하지 않고 그냥 넘김 (SENDING 인채로)
         else if(billNotification.sendStatus() == SendStatus.SENDING
                 && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= 10) {
+
             billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.SMS, SendStatus.SENDING, LocalDateTime.now());
             return true;
         }
