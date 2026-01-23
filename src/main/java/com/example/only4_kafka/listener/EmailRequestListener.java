@@ -2,12 +2,27 @@ package com.example.only4_kafka.listener;
 
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.service.email.EmailSendService;
-import com.example.only4_kafka.service.sms.SmsKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
+/**
+ * 이메일 발송 요청 Kafka 리스너
+ *
+ * [발송만 비동기 처리 방식]
+ * 1) Kafka에서 메시지 수신
+ * 2) 조회 → 매핑 → 렌더링 (동기, 리스너 스레드에서 실행)
+ * 3) 발송만 스레드풀에 위임 (EmailClient.sendAsync)
+ * 4) 리스너는 발송 완료를 기다리지 않고 다음 메시지 처리
+ *
+ * [장점]
+ * - DB 조회는 순차적 → 커넥션 부담 적음
+ * - 발송(1초 I/O)만 병렬 → 처리량 향상
+ * - 구조 단순
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -20,15 +35,11 @@ public class EmailRequestListener {
             groupId = "${app.kafka.topics.group-id}",
             containerFactory = "emailKafkaListenerContainerFactory"
     )
-    public void listen(EmailSendRequestEvent event,
-                       @org.springframework.messaging.handler.annotation.Header(org.springframework.kafka.support.KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        log.info("[TEST-LOG] Thread: {}, Topic: {}, BillId: {}, Time: {}", 
-                Thread.currentThread().getName(), topic, event.billId(), System.currentTimeMillis());
-
-        if (event.memberId() == -999L) {
-            throw new RuntimeException("Simulated Failure for Retry Test");
-        }
-        
+    public void listen(
+            EmailSendRequestEvent event,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic
+    ) {
+        // 조회 → 매핑 → 렌더링 (동기) → 발송 위임 (비동기)
         emailSendService.send(event);
     }
 }

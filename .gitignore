@@ -43,6 +43,7 @@ out/
 .env
 src/main/resources/application-*.yml
 src/main/resources/db/
+src/main/resources/architecture/
 
 # --- Docker Data (데이터 절대 올리면 안 됨) ---
 pg_data/
