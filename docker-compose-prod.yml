@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  consumer-app:
+    image: ${IMAGE_NAME:-only4-kafka:latest}
+    container_name: only4_kafka_consumer_prod
+    restart: always
+    ports:
+      - "8081:8081"
+
+    environment:
+      # [1] Spring Boot 필수 설정
+      SPRING_PROFILES_ACTIVE: prod
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
