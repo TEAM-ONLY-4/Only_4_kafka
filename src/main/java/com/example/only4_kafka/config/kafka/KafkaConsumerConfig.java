@@ -1,5 +1,7 @@
 package com.example.only4_kafka.config.kafka;
 
+import com.example.only4_kafka.config.properties.KafkaAppProperties;
+import com.example.only4_kafka.config.properties.KafkaTopicsProperties;
 import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.constant.KafkaPropertiesConstant;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
@@ -29,7 +31,7 @@ public class KafkaConsumerConfig {
     private final RetryProperties retryProperties;
     private final KafkaAppProperties kafkaAppProperties;
     // TopicsProperties는 현재 코드에서 직접 쓰이지 않더라도 구조상 유지하거나 필요시 사용
-    private final KafkaTopicsProperties kafkaTopicsProperties; 
+    private final KafkaTopicsProperties kafkaTopicsProperties;
     private final SmsFailureHandler smsFailureHandler;
 
     // --- ConsumerFactory 설정 ---
