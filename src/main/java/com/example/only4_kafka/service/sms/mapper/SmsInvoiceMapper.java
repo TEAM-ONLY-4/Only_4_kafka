@@ -19,7 +19,6 @@ public class SmsInvoiceMapper {
         
         // 전화번호 복호화
         String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(original.phoneNumber());
-        log.info("복호화 휴대전화. decryptedPhoneNumber={}", decryptedPhoneNumber);
 
         return new SmsBillDto(
             original.name(),

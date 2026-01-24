@@ -32,37 +32,24 @@ public class SmsSendService {
     private final RetryProperties retryProperties; // 재시도 BackOff 시간 가져오기 위해 사용
 
     public void send(SmsSendRequestEvent event) {
-        log.info("1) SMS 전송 요청. memberId={}, billId={}", event.memberId(), event.billId());
-
         // 1. Data fetch
         SmsInvoiceReadResult readResult = smsInvoiceReader.read(event.billId());
-        log.info("2) 데이터 조회 완료. memberId={}, billId={}", event.memberId(), event.billId());
-
         // 2. 시작 전에 DB 체크 후 발송 상태 변경
         BillNotificationRow billNotification = readResult.billNotificationRow();
-
         // 재시도가 아닌 남이 선점 중이면 진행 중단
         if(!checkBillNotification(billNotification)) return;
 
         // 3. Map to template DTO (Decrypts phone number)
-        log.info("3) 템플릿 DTO 매핑 시작. memberId={}, billId={}", event.memberId(), event.billId());
         SmsBillDto smsBillDto = smsInvoiceMapper.toDto(readResult);
-        log.info("4) 템플릿 DTO 매핑 완료. memberId={}, billId={}", event.memberId(), event.billId());
 
         // 4. Render Text
-        log.info("5) SMS 텍스트 렌더링 시작. memberId={}, billId={}", event.memberId(), event.billId());
         String smsContent = smsTemplateRenderer.render(smsBillDto);
-        log.info("6) SMS 텍스트 렌더링 완료. memberId={}, billId={}, contentLength={}", event.memberId(), event.billId(), smsContent.length());
-        // log.info("6-1) SMS 청구서 결과 \n {}", smsContent);
 
         // 5. update bill status
         billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.SMS, SendStatus.SENT, null);
 
         // 6. Send SMS
-        log.info("7) SMS 전송 요청 시작. memberId={}, billId={}, phone={}",
-                event.memberId(), event.billId(), smsBillDto.phoneNumber());
         smsClient.send(smsBillDto.phoneNumber(), smsBillDto.billId(), smsContent);
-        log.info("8) SMS 전송 요청 종료. memberId={}, billId={}", event.memberId(), event.billId());
     }
 
     // BillNotification 상태 확인 후 발송 상태, processStartTime 업데이트

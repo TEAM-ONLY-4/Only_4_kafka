@@ -24,6 +24,5 @@ public class BillNotificationWriter {
         if (updatedCount == 0) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        log.info("BillNotification 업데이트 완료 (BillId: {}, Channel: {}, SendStatus: {})", billId, channel, sendStatus);
     }
 }
