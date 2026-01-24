@@ -7,10 +7,10 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: only4-kafka-consumer
-  ECS_SERVICE: only4-kafka-consumer-service  # ECS 서비스 이름 (생성 필요)
-  ECS_CLUSTER: only4-batch-cluster  # ECS 클러스터 이름 (생성 필요)
+  ECS_SERVICE: only4-kafka-consumer-service
+  ECS_CLUSTER: only4-batch-cluster
   ECS_TASK_DEFINITION: task-kafka.json
-  CONTAINER_NAME: kafka-container      # task-kafka.json의 container name과 일치해야 함
+  CONTAINER_NAME: kafka-container
 
 permissions:
   contents: read
@@ -54,11 +54,11 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # 이미지를 빌드하고 ECR로 푸시합니다.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      # 1. 렌더링 (이미지 교체 + 환경변수 주입)
       - name: Render Amazon ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -66,7 +66,6 @@ jobs:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
-          # task-definition.json 안에 있는 환경 변수 플레이스홀더를 Secrets 값으로 치환
           environment-variables: |
             PROD_DB_URL=${{ secrets.PROD_DB_URL }}
             PROD_DB_USER=${{ secrets.PROD_DB_USER }}
@@ -77,13 +76,20 @@ jobs:
             KAFKA_EMAIL_REQUEST=${{ secrets.KAFKA_EMAIL_REQUEST }}
             KAFKA_SMS_REQUEST=${{ secrets.KAFKA_SMS_REQUEST }}
             KAFKA_DLT=${{ secrets.KAFKA_DLT }}
-            ECS_TASK_EXECUTION_ROLE_ARN=${{ secrets.ECS_TASK_EXECUTION_ROLE_ARN }}
-            ECS_TASK_ROLE_ARN=${{ secrets.ECS_TASK_ROLE_ARN }}
             MAXIMUM_POOL_SIZE=${{ secrets.MAXIMUM_POOL_SIZE }}
 
+      # 🚨 2. [필수 추가] Role ARN 치환 (이게 없으면 에러남!)
+      - name: Replace Role ARNs in Task Definition
+        run: |
+          sed -i "s|ECS_TASK_EXECUTION_ROLE_ARN|${{ secrets.ECS_TASK_EXECUTION_ROLE_ARN }}|g" ${{ steps.render-task-def.outputs.task-definition }}
+          sed -i "s|ECS_TASK_ROLE_ARN|${{ secrets.ECS_TASK_ROLE_ARN }}|g" ${{ steps.render-task-def.outputs.task-definition }}
+
+      # 3. 배포 (서비스 업데이트)
+      # 이 액션은 'Register Task Def' + 'Update Service'를 한 번에 수행합니다.
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
+          # 위에서 sed로 수정된 파일을 사용
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
