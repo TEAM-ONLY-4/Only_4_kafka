@@ -8,6 +8,8 @@ spring:
   # [공통] DB 드라이버 & JPA 설정
   datasource:
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 80
 
   jpa:
     hibernate:
