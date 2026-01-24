@@ -28,16 +28,6 @@
           "awslogs-stream-prefix": "ecs"
         }
       },
-      "healthCheck": {
-        "command": [
-          "CMD-SHELL",
-          "curl -f http://localhost:8081/actuator/health || exit 1"
-        ],
-        "interval": 30,
-        "timeout": 10,
-        "retries": 3,
-        "startPeriod": 120
-      },
       "environment": [
         { "name": "SPRING_PROFILES_ACTIVE", "value": "prod" }
       ]
