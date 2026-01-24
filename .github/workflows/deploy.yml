@@ -78,6 +78,7 @@ jobs:
             KAFKA_DLT=${{ secrets.KAFKA_DLT }}
             KAFKA_PARTITIONS=${{ secrets.KAFKA_PARTITIONS }}
             KAFKA_CONCURRENCY=${{ secrets.KAFKA_CONCURRENCY }}
+            KAFKA_PARALLEL_CONCURRENCY=${{ secrets.KAFKA_PARALLEL_CONCURRENCY }}
             MAXIMUM_POOL_SIZE=${{ secrets.MAXIMUM_POOL_SIZE }}
             EMAIL_MAX_ATTEMPTS=${{ secrets.EMAIL_MAX_ATTEMPTS }}
             SMS_MAX_ATTEMPTS=${{ secrets.SMS_MAX_ATTEMPTS }}
