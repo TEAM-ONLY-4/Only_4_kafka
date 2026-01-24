@@ -27,9 +27,9 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     private final RetryProperties retryProperties;
-    // KafkaTemplate은 이제 ProducerConfig에서 관리하므로 여기서 필수는 아니지만, 필요시 사용
-    // private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String BOOTSTRAP_SERVERS = "localhost:9092";
+    private final KafkaAppProperties kafkaAppProperties;
+    // TopicsProperties는 현재 코드에서 직접 쓰이지 않더라도 구조상 유지하거나 필요시 사용
+    private final KafkaTopicsProperties kafkaTopicsProperties; 
     private final SmsFailureHandler smsFailureHandler;
 
     // --- ConsumerFactory 설정 ---
@@ -38,7 +38,6 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, EmailSendRequestEvent> emailConsumerFactory(KafkaProperties kafkaProperties) {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
 
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
@@ -59,7 +58,6 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, SmsSendRequestEvent> smsConsumerFactory(KafkaProperties kafkaProperties) {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
 
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
@@ -86,7 +84,7 @@ public class KafkaConsumerConfig {
 
         // 2. 메서드 호출 시 kafkaProperties 전달
         factory.setConsumerFactory(emailConsumerFactory(kafkaProperties));
-        factory.setConcurrency(8);
+        factory.setConcurrency(kafkaAppProperties.concurrency());
 
         // [성능 튜닝 4] AckMode 설정 (중요!)
         // ENABLE_AUTO_COMMIT=false이므로, 리스너가 정상 종료되면 커밋하도록 설정
@@ -106,7 +104,7 @@ public class KafkaConsumerConfig {
 
         // 2. 메서드 호출 시 kafkaProperties 전달
         factory.setConsumerFactory(smsConsumerFactory(kafkaProperties));
-        factory.setConcurrency(8);
+        factory.setConcurrency(kafkaAppProperties.concurrency());
 
         // [성능 튜닝 4] AckMode 설정 (중요!)
         // ENABLE_AUTO_COMMIT=false이므로, 리스너가 정상 종료되면 커밋하도록 설정

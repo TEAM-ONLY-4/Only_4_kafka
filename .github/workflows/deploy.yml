@@ -67,16 +67,19 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
           environment-variables: |
+            PROD_DB=${{ secrets.PROD_DB }}
             PROD_DB_URL=${{ secrets.PROD_DB_URL }}
             PROD_DB_USER=${{ secrets.PROD_DB_USER }}
             PROD_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             PROD_KAFKA_URL=${{ secrets.PROD_KAFKA_URL }}
             KAFKA_GROUP_ID=${{ secrets.KAFKA_GROUP_ID }}
             KAFKA_EMAIL_REQUEST=${{ secrets.KAFKA_EMAIL_REQUEST }}
             KAFKA_SMS_REQUEST=${{ secrets.KAFKA_SMS_REQUEST }}
             KAFKA_DLT=${{ secrets.KAFKA_DLT }}
+            KAFKA_PARTITIONS=${{ secrets.KAFKA_PARTITIONS }}
+            KAFKA_CONCURRENCY=${{ secrets.KAFKA_CONCURRENCY }}
             MAXIMUM_POOL_SIZE=${{ secrets.MAXIMUM_POOL_SIZE }}
+            
 
       # 🚨 2. [필수 추가] Role ARN 치환 (이게 없으면 에러남!)
       - name: Replace Role ARNs in Task Definition
