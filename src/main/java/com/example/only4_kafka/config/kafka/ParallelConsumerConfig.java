@@ -38,10 +38,11 @@ import java.util.concurrent.Executors;
 @Configuration
 public class ParallelConsumerConfig {
 
-    private static final int MAX_CONCURRENCY = 100;
-
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
     private String bootstrapServers;
+
+    @Value("${app.kafka.parallel-concurrency:100}")
+    private int maxConcurrency;
 
     private final KafkaTopicsProperties topicsProperties;
 
@@ -75,11 +76,11 @@ public class ParallelConsumerConfig {
                 .<String, EmailSendRequestEvent>builder()
                 .consumer(emailParallelKafkaConsumer)
                 .ordering(ProcessingOrder.UNORDERED)
-                .maxConcurrency(MAX_CONCURRENCY)
+                .maxConcurrency(maxConcurrency)
                 .commitMode(ParallelConsumerOptions.CommitMode.PERIODIC_CONSUMER_ASYNCHRONOUS)
                 .build();
 
-        log.info("Parallel Consumer 설정 완료. maxConcurrency={}, ordering=KEY", MAX_CONCURRENCY);
+        log.info("Parallel Consumer 설정 완료. maxConcurrency={}, ordering=KEY", maxConcurrency);
 
         return ParallelStreamProcessor.createEosStreamProcessor(options);
     }
