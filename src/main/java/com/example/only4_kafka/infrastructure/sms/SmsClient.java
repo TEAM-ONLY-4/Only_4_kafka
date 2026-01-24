@@ -28,7 +28,7 @@ public class SmsClient {
             // SMS 발송 실패 예외처리
             throw new BusinessException(ErrorCode.SMS_SEND_FAILED);
         }
-
-        log.info("[SMS 발송 성공] (BillId: {}, phone: {}, smsBillContent: {})", billId, phoneNumber, smsBillContent);
+//        log.info("[SMS 발송 성공] (BillId: {}, phone: {}, smsBillContent: {})", billId, phoneNumber, smsBillContent);
+        log.info("[SMS 발송 성공] (BillId: {}, phone: {})", billId, phoneNumber);
     }
 }

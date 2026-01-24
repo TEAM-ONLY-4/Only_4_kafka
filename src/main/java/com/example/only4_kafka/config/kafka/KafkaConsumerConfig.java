@@ -88,11 +88,10 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(emailConsumerFactory(kafkaProperties));
         factory.setConcurrency(kafkaAppProperties.concurrency());
 
-        // [성능 튜닝 4] AckMode 설정 (중요!)
-        // ENABLE_AUTO_COMMIT=false이므로, 리스너가 정상 종료되면 커밋하도록 설정
-        // MANUAL_IMMEDIATE: Acknowledgment.acknowledge() 호출 시 즉시 커밋 (안전성 높음)
-        // BATCH: poll() 한 뭉텅이 처리가 다 끝나면 한 번에 커밋 (속도 빠름, 실패 시 중복 처리 범위 넓어짐)
-        // 이메일 중복 발송 방지가 중요하다면 MANUAL_IMMEDIATE, 속도가 최우선이면 BATCH
+        // [AckMode 설정]
+        // BATCH: 리스너 메서드 정상 종료 시 커밋
+        // - 조회/매핑/렌더링 완료 후 커밋
+        // - 발송은 비동기로 별도 스레드에서 처리 (EmailClient.sendAsync)
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
 
         return factory;
