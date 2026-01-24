@@ -65,7 +65,6 @@ public class EmailInvoiceMapper {
 
         // 민감정보 복호화
         String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(memberBill.memberPhoneNumber());
-        log.info("3-1) 복호화 휴대전화. decryptedPhoneNumber={}", decryptedPhoneNumber);
         return new EmailInvoiceTemplateDto(
                 // 기본 정보
                 memberBill.billingYearMonth().getYear(),
