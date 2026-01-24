@@ -1,4 +1,9 @@
+server:
+  shutdown: graceful
+
 spring:
+  lifecycle:
+      timeout-per-shutdown-phase: 30s # 서버 꺼질 때 Graceful shutdown 위한 최대 대기 시간
   profiles:
     active: local # 기본 모드 설정
 
@@ -9,7 +14,7 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 80
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE}
 
   jpa:
     hibernate:
@@ -25,7 +30,6 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      #      group-id: only4-consumer-group
       # earliest: 큐에 쌓인 옛날 메시지부터 읽기 / latest: 지금부터 온 것만 읽기
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -33,18 +37,20 @@ spring:
 
 app: # 커스텀 설정 루트(prefix)
   kafka: # kafka 관련 설정을 묶는 네임스페이스
+    partitions: ${KAFKA_PARTITIONS:8}
+    concurrency: ${KAFKA_CONCURRENCY:8}
     topics: # 토픽 이름들을 모아두는 구역
-      group-id: only4-consumer-group # Kafka Consumer Group ID / 같은 group.id를 가진 컨슈머 인스턴스들은 하나의 그룹으로 동작하고, 파티션을 분담함
-      email-request: email.send.request
-      sms-request: sms.send.request
-      dlt: notification.dlt
+      group-id: ${KAFKA_GROUP_ID} # Kafka Consumer Group ID / 같은 group.id를 가진 컨슈머 인스턴스들은 하나의 그룹으로 동작하고, 파티션을 분담함
+      email-request: ${KAFKA_EMAIL_REQUEST}
+      sms-request: ${KAFKA_SMS_REQUEST}
+      dlt: ${KAFKA_DLT}
 
     retry: # 재시도 관련 설정을 묶는 구역
-      email-max-attempts: 2
-      sms-max-attempts: 2
-      initial-interval-ms: 3000 # 백오프(재시도 간격)의 시작값 / 3초 후 첫 재시도
-      multiplier: 2.0 # 지수 백오프 배율
-      max-interval-ms: 30000 # 재시도 간격 상한 / 아무리 커져도 30초를 넘지 않음
+      email-max-attempts: ${EMAIL_MAX_ATTEMPTS:2}
+      sms-max-attempts: ${SMS_MAX_ATTEMPTS:2}
+      initial-interval-ms: ${INITIAL_INTERVAL_MS:1000} # 백오프(재시도 간격)의 시작값 / 3초 후 첫 재시도
+      multiplier: ${RETRY_MULTIPLIER:2.0} # 지수 백오프 배율
+      max-interval-ms: ${MAX_INTERVAL_MS:10000} # 재시도 간격 상한 / 아무리 커져도 10초를 넘지 않음
 
 # ==========================================
 # [모니터링 & 액추에이터 핵심 설정]
@@ -78,6 +84,8 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+      sla:
+        http.server.requests: 100ms, 500ms, 1s # 1초 넘는 요청 카운팅
 
     # 각 컴포넌트별 메트릭 수집 활성화
     enable:
@@ -85,3 +93,5 @@ management:
       process: true    # CPU 사용량, 스레드 개수 (필수)
       system: true     # 시스템 가동 시간 등
       kafka: true      # ★ 카프카 컨슈머 지표 (Lag, 처리량 등)
+      jdbc: true
+      logback: true    # Error 로그 발생 횟수 카운트

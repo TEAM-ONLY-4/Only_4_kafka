@@ -1,0 +1,104 @@
+name: Deploy to Amazon ECS
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: only4-kafka-consumer
+  ECS_SERVICE: only4-kafka-consumer-service
+  ECS_CLUSTER: only4-batch-cluster
+  ECS_TASK_DEFINITION: task-kafka.json
+  CONTAINER_NAME: kafka-container
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean bootJar -x test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # 1. 렌더링 (이미지 교체 + 환경변수 주입)
+      - name: Render Amazon ECS task definition
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            PROD_DB=${{ secrets.PROD_DB }}
+            PROD_DB_URL=${{ secrets.PROD_DB_URL }}
+            PROD_DB_USER=${{ secrets.PROD_DB_USER }}
+            PROD_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+            PROD_KAFKA_URL=${{ secrets.PROD_KAFKA_URL }}
+            KAFKA_GROUP_ID=${{ secrets.KAFKA_GROUP_ID }}
+            KAFKA_EMAIL_REQUEST=${{ secrets.KAFKA_EMAIL_REQUEST }}
+            KAFKA_SMS_REQUEST=${{ secrets.KAFKA_SMS_REQUEST }}
+            KAFKA_DLT=${{ secrets.KAFKA_DLT }}
+            KAFKA_PARTITIONS=${{ secrets.KAFKA_PARTITIONS }}
+            KAFKA_CONCURRENCY=${{ secrets.KAFKA_CONCURRENCY }}
+            MAXIMUM_POOL_SIZE=${{ secrets.MAXIMUM_POOL_SIZE }}
+            EMAIL_MAX_ATTEMPTS=${{ secrets.EMAIL_MAX_ATTEMPTS }}
+            SMS_MAX_ATTEMPTS=${{ secrets.SMS_MAX_ATTEMPTS }}
+            INITIAL_INTERVAL_MS=${{ secrets.INITIAL_INTERVAL_MS }}
+            RETRY_MULTIPLIER=${{ secrets.RETRY_MULTIPLIER }}
+            MAX_INTERVAL_MS=${{ secrets.MAX_INTERVAL_MS }}
+            
+
+      # 🚨 2. [필수 추가] Role ARN 치환 (이게 없으면 에러남!)
+      - name: Replace Role ARNs in Task Definition
+        run: |
+          sed -i "s|ECS_TASK_EXECUTION_ROLE_ARN|${{ secrets.ECS_TASK_EXECUTION_ROLE_ARN }}|g" ${{ steps.render-task-def.outputs.task-definition }}
+          sed -i "s|ECS_TASK_ROLE_ARN|${{ secrets.ECS_TASK_ROLE_ARN }}|g" ${{ steps.render-task-def.outputs.task-definition }}
+
+      # 3. 배포 (서비스 업데이트)
+      # 이 액션은 'Register Task Def' + 'Update Service'를 한 번에 수행합니다.
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          # 위에서 sed로 수정된 파일을 사용
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
