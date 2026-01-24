@@ -1,8 +1,8 @@
 {
   "family": "only4-kafka-task",
   "networkMode": "awsvpc",
-  "executionRoleArn": "${ECS_TASK_EXECUTION_ROLE_ARN}",
-  "taskRoleArn": "${ECS_TASK_ROLE_ARN}",
+  "executionRoleArn": "ECS_TASK_EXECUTION_ROLE_ARN",
+  "taskRoleArn": "ECS_TASK_ROLE_ARN",
   "cpu": "1024",
   "memory": "2048",
   "requiresCompatibilities": [
@@ -39,16 +39,7 @@
         "startPeriod": 40
       },
       "environment": [
-        { "name": "SPRING_PROFILES_ACTIVE", "value": "prod" },
-        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://${PROD_DB_URL}:5432/${POSTGRES_DB}" },
-        { "name": "SPRING_DATASOURCE_USERNAME", "value": "${PROD_DB_USER}" },
-        { "name": "SPRING_DATASOURCE_PASSWORD", "value": "${PROD_DB_PASSWORD}" },
-        { "name": "SPRING_KAFKA_BOOTSTRAP_SERVERS", "value": "${PROD_KAFKA_URL}:9092" },
-        { "name": "KAFKA_GROUP_ID", "value": "${KAFKA_GROUP_ID}" },
-        { "name": "KAFKA_EMAIL_REQUEST", "value": "${KAFKA_EMAIL_REQUEST}" },
-        { "name": "KAFKA_SMS_REQUEST", "value": "${KAFKA_SMS_REQUEST}" },
-        { "name": "KAFKA_DLT", "value": "${KAFKA_DLT}" },
-        { "name": "MAXIMUM_POOL_SIZE", "value": "${MAXIMUM_POOL_SIZE}" }
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "prod" }
       ]
     }
   ]
