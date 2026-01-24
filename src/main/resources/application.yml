@@ -1,4 +1,9 @@
+server:
+  shutdown: graceful
+
 spring:
+  lifecycle:
+      timeout-per-shutdown-phase: 30s # 서버 꺼질 때 Graceful shutdown 위한 최대 대기 시간
   profiles:
     active: local # 기본 모드 설정
 

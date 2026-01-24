@@ -1,0 +1,35 @@
+{
+  "family": "only4-kafka-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "ECS_TASK_EXECUTION_ROLE_ARN",
+  "taskRoleArn": "ECS_TASK_ROLE_ARN",
+  "containerDefinitions": [
+    {
+      "name": "kafka-container",
+      "image": "KAFKA_CONSUMER_IMAGE_PLACEHOLDER",
+      "essential": true,
+      "command": [
+        "java",
+        "-jar",
+        "app.jar",
+        "--spring.batch.job.name=kafkaJob"
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/only4-kafka",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "kafka"
+        }
+      },
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "prod" },
+        { "name": "SPRING_BATCH_JOB_ENABLED", "value": "true" },
+        { "name": "SPRING_BATCH_JOB_NAME", "value": "kafkaJob" }
+      ]
+    }
+  ]
+}

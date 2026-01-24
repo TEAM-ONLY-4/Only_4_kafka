@@ -1,7 +1,7 @@
 FROM amazoncorretto:21-alpine
 
 # [필수] Alpine 리눅스는 tzdata가 없으므로 설치해야 함
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata curl
 
 # 한국 시간대 설정
 ENV TZ=Asia/Seoul
