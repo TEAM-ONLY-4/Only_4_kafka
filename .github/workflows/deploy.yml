@@ -6,9 +6,9 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: only4-kafka-repo  # ECR 리포지토리 이름 (생성 필요)
-  ECS_SERVICE: only4-kafka-service  # ECS 서비스 이름 (생성 필요)
-  ECS_CLUSTER: only4-kafka-cluster  # ECS 클러스터 이름 (생성 필요)
+  ECR_REPOSITORY: only4-kafka-consumer
+  ECS_SERVICE: only4-kafka-consumer-service  # ECS 서비스 이름 (생성 필요)
+  ECS_CLUSTER: only4-batch-cluster  # ECS 클러스터 이름 (생성 필요)
   ECS_TASK_DEFINITION: task-kafka.json
   CONTAINER_NAME: kafka-container      # task-kafka.json의 container name과 일치해야 함
 
