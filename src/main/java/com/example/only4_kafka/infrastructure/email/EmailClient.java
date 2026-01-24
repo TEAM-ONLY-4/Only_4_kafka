@@ -9,12 +9,18 @@ import org.springframework.stereotype.Component;
 
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 /**
  * 이메일 발송 클라이언트
  *
  * [동기 발송] send() - 호출 스레드에서 1초 대기
- * [비동기 발송] sendAsync() - 스레드풀에 위임, 재시도 포함
+ * [비동기 발송] sendAsync() - 가상 스레드풀에 위임, Semaphore로 동시 처리 수 제한
+ *
+ * [가상 스레드 + Semaphore]
+ * - 가상 스레드: I/O 블로킹에 효율적, 메모리 가벼움
+ * - Semaphore: 동시 처리 수 제한 (DB 커넥션, 외부 API 보호)
+ * - 제한 초과 시 대기 (가상 스레드라서 OS 스레드 안 막힘)
  */
 @Slf4j
 @Component
@@ -22,10 +28,14 @@ public class EmailClient {
 
     private final Random random = new Random();
     private final ExecutorService executorService;
+    private final Semaphore semaphore;
     private final RetryProperties retryProperties;
 
-    public EmailClient(ExecutorService emailSendExecutorService, RetryProperties retryProperties) {
+    public EmailClient(ExecutorService emailSendExecutorService,
+                       Semaphore emailSendSemaphore,
+                       RetryProperties retryProperties) {
         this.executorService = emailSendExecutorService;
+        this.semaphore = emailSendSemaphore;
         this.retryProperties = retryProperties;
     }
 
@@ -40,36 +50,51 @@ public class EmailClient {
     }
 
     /**
-     * [비동기 발송] - 발송만 스레드풀에 위임
+     * [비동기 발송] - 가상 스레드풀에 위임
+     * - Semaphore로 동시 처리 수 제한 (maxConcurrency=100)
      * - 조회/매핑/렌더링은 이미 완료된 상태
-     * - 발송(1초)만 별도 스레드에서 실행
-     * - 자체 재시도 포함 (3회)
+     * - 발송(1초)만 별도 가상 스레드에서 실행
+     * - 자체 재시도 포함
      * - 최종 실패 시 콜백 호출
      */
     public void sendAsync(String to, String htmlContent, Long billId, Runnable onFinalFailure) {
         executorService.submit(() -> {
-            int maxAttempts = retryProperties.emailMaxAttempts();
-            long intervalMs = retryProperties.initialIntervalMs();
+            try {
+                // Semaphore로 동시 처리 수 제한
+                // - 허가 획득 (없으면 대기, 가상 스레드라서 OS 스레드 안 막힘)
+                semaphore.acquire();
 
-            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
                 try {
-                    log.info("[EMAIL] 비동기 발송 시도 {}/{}. to={}, billId={}", attempt, maxAttempts, to, billId);
-                    send(to, htmlContent);  // 기존 동기 발송 호출
-                    return;  // 성공하면 종료
+                    int maxAttempts = retryProperties.emailMaxAttempts();
+                    long intervalMs = retryProperties.initialIntervalMs();
 
-                } catch (Exception e) {
-                    log.warn("[EMAIL] 비동기 발송 실패 {}/{}. billId={}, error={}", attempt, maxAttempts, billId, e.getMessage());
+                    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+                        try {
+                            send(to, htmlContent);
+                            return;  // 성공하면 종료
 
-                    if (attempt < maxAttempts) {
-                        sleep(intervalMs);
+                        } catch (Exception e) {
+
+                            if (attempt < maxAttempts) {
+                                sleep(intervalMs);
+                            }
+                        }
                     }
-                }
-            }
 
-            // 최종 실패: 콜백 실행 (SMS 전환 등)
-            log.error("[EMAIL] 최종 실패. billId={}", billId);
-            if (onFinalFailure != null) {
-                onFinalFailure.run();
+                    // 최종 실패: 콜백 실행 (SMS 전환 등)
+                    log.error("[EMAIL] 최종 실패. billId={}", billId);
+                    if (onFinalFailure != null) {
+                        onFinalFailure.run();
+                    }
+
+                } finally {
+                    // 반드시 Semaphore 반환
+                    semaphore.release();
+                }
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("[EMAIL] Semaphore 대기 중 인터럽트. billId={}", billId);
             }
         });
     }

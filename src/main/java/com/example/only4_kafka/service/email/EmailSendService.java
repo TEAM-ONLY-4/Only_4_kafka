@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,40 +35,38 @@ public class EmailSendService {
     private final MemberDataDecryptor memberDataDecryptor;
     private final BillNotificationWriter billNotificationWriter;
     private final RetryProperties retryProperties;
-    private final SmsKafkaProducer smsKafkaProducer;  // SMS 전환용 추가
+    private final SmsKafkaProducer smsKafkaProducer;
+    private final ExecutorService emailSendExecutorService;
 
     public void send(EmailSendRequestEvent event) {
-        // 1. Data fetch
+        // 1. 데이터 조회
         EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(event.memberId(), event.billId());
-
-        // 2. ���� �� DB üũ �� �߼� ���� ����
         BillNotificationRow billNotification = emailInvoiceReadResult.billNotificationRow();
 
-        // ��õ��� �ƴ� ���̽��� �� ���� ���̸� �ߴ�
+        // 2. 상태 체크 (SENT면 스킵 - 중복 방지)
         if (!checkBillNotification(billNotification)) return;
 
-        // 2. Map to template DTO
+        // 3. 렌더링
         EmailInvoiceTemplateDto emailInvoiceTemplateDto = emailInvoiceMapper.toDto(emailInvoiceReadResult);
-
-        // 3. Render HTML
         String htmlContent = emailTemplateRenderer.render(emailInvoiceTemplateDto);
 
-        // 4. update bill status
+        // 4. SENT로 변경 (이메일 발송 전 선점)
         billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.EMAIL, SendStatus.SENT, null);
 
-        // 5. Send email (비동기)
-        // - 조회/매핑/렌더링은 완료, 발송(1초)만 스레드풀에 위임
-        // - 최종 실패 시 SMS 전환
+        // 5. 이메일 정보 추출
         String encryptedEmail = emailInvoiceReadResult.memberBill().memberEmail();
         String memberEmail = memberDataDecryptor.decryptEmail(encryptedEmail);
 
-        emailClient.sendAsync(memberEmail, htmlContent, event.billId(), () -> {
-            // 최종 실패 콜백: SMS로 전환
-            log.warn("[EmailSendService] 이메일 최종 실패. SMS 전환. billId={}", event.billId());
-            smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
+        // 6. 이메일 발송 비동기 위임 (가상 스레드)
+        emailSendExecutorService.submit(() -> {
+            try {
+                emailClient.send(memberEmail, htmlContent);
+                log.info("[EMAIL_COMPLETE] billId={} 발송 완료", event.billId());
+            } catch (Exception e) {
+                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage());
+                smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
+            }
         });
-
-        log.info("8) Email 발송 위임 완료. memberId={}, billId={}", event.memberId(), event.billId());
     }
 
     private boolean checkBillNotification(BillNotificationRow billNotification) {
