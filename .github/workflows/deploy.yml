@@ -77,7 +77,8 @@ jobs:
             KAFKA_EMAIL_REQUEST=${{ secrets.KAFKA_EMAIL_REQUEST }}
             KAFKA_SMS_REQUEST=${{ secrets.KAFKA_SMS_REQUEST }}
             KAFKA_DLT=${{ secrets.KAFKA_DLT }}
-            AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+            ECS_TASK_EXECUTION_ROLE_ARN=${{ secrets.ECS_TASK_EXECUTION_ROLE_ARN }}
+            ECS_TASK_ROLE_ARN=${{ secrets.ECS_TASK_ROLE_ARN }}
             MAXIMUM_POOL_SIZE=${{ secrets.MAXIMUM_POOL_SIZE }}
 
       - name: Deploy Amazon ECS task definition
