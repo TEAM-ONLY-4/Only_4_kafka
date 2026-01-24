@@ -91,7 +91,6 @@ public class InvoiceQueryRepository {
                 LEFT JOIN bill_item bi ON bi.bill_id = b.id
                 WHERE b.member_id = ?
                   AND b.billing_year_month <= ?
-                  AND b.status = 'ACTIVE'
                 GROUP BY b.id, b.billing_year_month, b.total_amount, b.vat, b.total_discount_amount, b.total_billed_amount
                 ORDER BY b.billing_year_month DESC
                 LIMIT ?
