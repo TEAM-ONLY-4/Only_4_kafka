@@ -10,22 +10,19 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 /**
- * 이메일 발송 요청 Kafka 리스너
+ * [비활성화됨] - EmailParallelConsumer로 대체
+ *
+ * 이메일 발송 요청 Kafka 리스너 (기존 방식)
  *
  * [발송만 비동기 처리 방식]
  * 1) Kafka에서 메시지 수신
  * 2) 조회 → 매핑 → 렌더링 (동기, 리스너 스레드에서 실행)
  * 3) 발송만 스레드풀에 위임 (EmailClient.sendAsync)
  * 4) 리스너는 발송 완료를 기다리지 않고 다음 메시지 처리
- *
- * [장점]
- * - DB 조회는 순차적 → 커넥션 부담 적음
- * - 발송(1초 I/O)만 병렬 → 처리량 향상
- * - 구조 단순
  */
 @Slf4j
 @RequiredArgsConstructor
-@Component
+// @Component  // EmailParallelConsumer 사용으로 비활성화
 public class EmailRequestListener {
 
     private final EmailSendService emailSendService;
