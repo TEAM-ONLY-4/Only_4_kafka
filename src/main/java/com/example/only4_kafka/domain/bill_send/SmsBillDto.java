@@ -9,7 +9,8 @@ import java.time.LocalTime;
 public record SmsBillDto(
         // 고객 정보
         String name,
-        String phoneNumber,
+        String phoneNumber,              // 발송용 (원본)
+        String maskedPhoneNumber,        // 청구서 표시용 (마스킹)
         LocalTime doNotDisturbStartTime,
         LocalTime doNotDisturbEndTime,
 

@@ -3,7 +3,7 @@ LG U+ 모바일명세서
 
 고객명         [[${invoice.name}]]
 모바일 서비스번호
-               [[${invoice.phoneNumber}]]
+               [[${invoice.maskedPhoneNumber}]]
 명세서번호     [[${invoice.billId}]]
 청구월         [[${#temporals.format(invoice.billingYearMonth, 'yyyy-MM')}]]
 작성일자       [[${invoice.createdDate}]]

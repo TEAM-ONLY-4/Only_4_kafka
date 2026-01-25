@@ -63,14 +63,14 @@ public class EmailInvoiceMapper {
         // 최근 4개월 매핑
         List<EmailInvoiceTemplateDto.RecentMonth> recentMonthList = mapRecentMonths(recentBillRowList);
 
-        // 민감정보 복호화
-        String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(memberBill.memberPhoneNumber());
+        // 민감정보 복호화 + 마스킹 (청구서 표시용)
+        String maskedPhoneNumber = memberDataDecryptor.decryptAndMaskPhoneNumber(memberBill.memberPhoneNumber());
         return new EmailInvoiceTemplateDto(
                 // 기본 정보
                 memberBill.billingYearMonth().getYear(),
                 memberBill.billingYearMonth().getMonthValue(),
                 memberBill.memberName(),
-                decryptedPhoneNumber,
+                maskedPhoneNumber,
                 memberBill.memberGrade(),
                 memberBill.memberAddress(),
 

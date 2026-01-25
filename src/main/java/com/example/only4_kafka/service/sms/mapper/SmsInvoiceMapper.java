@@ -16,13 +16,16 @@ public class SmsInvoiceMapper {
 
     public SmsBillDto toDto(SmsInvoiceReadResult result) {
         SmsBillDto original = result.smsBillDto();
-        
-        // 전화번호 복호화
+
+        // 전화번호 복호화 (발송용 - 원본)
         String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(original.phoneNumber());
+        // 전화번호 복호화 + 마스킹 (청구서 표시용)
+        String maskedPhoneNumber = memberDataDecryptor.decryptAndMaskPhoneNumber(original.phoneNumber());
 
         return new SmsBillDto(
             original.name(),
             decryptedPhoneNumber,
+            maskedPhoneNumber,
             original.doNotDisturbStartTime(),
             original.doNotDisturbEndTime(),
             original.paymentOwnerName(),
