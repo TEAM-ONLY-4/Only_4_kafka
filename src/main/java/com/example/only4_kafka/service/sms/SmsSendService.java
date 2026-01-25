@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,46 +30,66 @@ public class SmsSendService {
     private final SmsTemplateRenderer smsTemplateRenderer;
     private final SmsClient smsClient;
     private final BillNotificationWriter billNotificationWriter;
-    private final RetryProperties retryProperties; // 재시도 BackOff 시간 가져오기 위해 사용
+    private final RetryProperties retryProperties;
+
+    // ============================================================================
+    // [선점 타임아웃 설정]
+    // SENDING 상태에서 이 시간(초)이 지나면 타임아웃으로 간주하고 재선점 허용
+    // TODO: 추후 application.yml로 외부화 권장 (app.kafka.preempt.sms-timeout-seconds)
+    // ============================================================================
+    private static final int PREEMPT_TIMEOUT_SECONDS = 30;
+
+    // ============================================================================
+    // [신규 로직 - 원자적 선점 기반]
+    //
+    // 흐름도:
+    //   Kafka 메시지 수신
+    //         ▼
+    //   tryPreempt(billId) ──── 실패(empty) ───→ return (다른 스레드가 처리 중)
+    //         │ 성공
+    //         ▼
+    //   데이터 조회 (SmsInvoiceReader.readSmsBillDto)
+    //         ▼
+    //   전화번호 복호화 (SmsInvoiceMapper)
+    //         ▼
+    //   템플릿 렌더링
+    //         ▼
+    //   SENT 상태 변경 (completeWithSuccess)
+    //         ▼
+    //   SMS 발송 (동기)
+    //         └── 실패 시 → 예외 발생 → Kafka 재시도 → 최종 실패 시 DLT
+    // ============================================================================
 
     public void send(SmsSendRequestEvent event) {
-        // 1. Data fetch
-        SmsInvoiceReadResult readResult = smsInvoiceReader.read(event.billId());
-        // 2. 시작 전에 DB 체크 후 발송 상태 변경
-        BillNotificationRow billNotification = readResult.billNotificationRow();
-        // 재시도가 아닌 남이 선점 중이면 진행 중단
-        if(!checkBillNotification(billNotification)) return;
+        Long billId = event.billId();
 
-        // 3. Map to template DTO (Decrypts phone number)
-        SmsBillDto smsBillDto = smsInvoiceMapper.toDto(readResult);
+        // [STEP 1] 선점 시도 (가장 먼저!)
+        Optional<BillNotificationRow> preemptedOptional = billNotificationWriter.tryPreempt(
+                billId,
+                BillChannel.SMS,
+                PREEMPT_TIMEOUT_SECONDS
+        );
 
-        // 4. Render Text
-        String smsContent = smsTemplateRenderer.render(smsBillDto);
-
-        // 5. update bill status
-        billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.SMS, SendStatus.SENT, null);
-
-        // 6. Send SMS
-        smsClient.send(smsBillDto.phoneNumber(), smsBillDto.billId(), smsContent);
-    }
-
-    // BillNotification 상태 확인 후 발송 상태, processStartTime 업데이트
-    private boolean checkBillNotification(BillNotificationRow billNotification) {
-        // 정상 흐름 & SENT인 채로 재시도 흐름 : SENDING & 선점 시각 현재로
-        if(billNotification.sendStatus() == SendStatus.PENDING || billNotification.sendStatus() == SendStatus.SENT) {
-            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.SMS, SendStatus.SENDING, LocalDateTime.now());
-            return true;
+        if (preemptedOptional.isEmpty()) {
+            // 선점 실패: 다른 스레드가 처리 중이거나, 이미 SENT/FAILED 상태
+            log.info("[SMS_SKIP] billId={} 선점 실패. 다른 스레드가 처리 중이거나 이미 완료됨", billId);
+            return;
         }
 
-        // SENDING인 채로 재시도 흐름 : 아무 것도 하지 않고 그냥 넘김 (SENDING 인채로)
-        else if(billNotification.sendStatus() == SendStatus.SENDING
-                && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= 10) {
+        // [STEP 2] 데이터 조회
+        SmsBillDto smsBillDto = smsInvoiceReader.readSmsBillDto(billId);
 
-            billNotificationWriter.updateBillNotificationSendStatus(billNotification.billId(), BillChannel.SMS, SendStatus.SENDING, LocalDateTime.now());
-            return true;
-        }
+        // [STEP 3] 전화번호 복호화
+        SmsBillDto decryptedSmsBillDto = smsInvoiceMapper.toDto(smsBillDto);
 
-        // 나머지 경우는 실행 중지
-        else return false;
+        // [STEP 4] 템플릿 렌더링
+        String smsContent = smsTemplateRenderer.render(decryptedSmsBillDto);
+
+        // [STEP 5] SENT 상태로 변경 (발송 전에!)
+        billNotificationWriter.completeWithSuccess(billId);
+
+        // [STEP 6] SMS 발송 (동기)
+        smsClient.send(decryptedSmsBillDto.phoneNumber(), billId, smsContent);
+        log.info("[SMS_COMPLETE] billId={} SMS 발송 완료", billId);
     }
 }

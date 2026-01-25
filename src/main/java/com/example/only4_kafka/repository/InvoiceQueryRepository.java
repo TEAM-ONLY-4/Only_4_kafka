@@ -136,6 +136,48 @@ public class InvoiceQueryRepository {
         );
     }
 
+    // bill_notification 선점 시도 (원자적 UPDATE + RETURNING)
+    public Optional<BillNotificationRow> tryPreemptForSending(Long billId, BillChannel channel, int timeoutSeconds) {
+        /*
+         * PostgreSQL UPDATE ... RETURNING 문법:
+         *   - UPDATE 실행과 동시에 변경된 행을 SELECT처럼 반환
+         *   - 조건에 맞는 행이 없으면 빈 결과 반환 (0행)
+         *   - 단일 쿼리로 "선점 + 데이터 획득" 가능
+         */
+        String sql = """
+                UPDATE bill_notification
+                SET send_status = 'SENDING'::send_status_enum,
+                    channel = ?::bill_channel_enum,
+                    process_start_time = NOW()
+                WHERE bill_id = ?
+                  AND (
+                    send_status = 'PENDING'
+                    OR (send_status = 'SENDING' AND process_start_time < NOW() - INTERVAL '%d seconds')
+                  )
+                RETURNING member_id, bill_id, channel, send_status, process_start_time
+                """.formatted(timeoutSeconds);
+
+        return jdbcTemplate.query(
+                sql,
+                this::mapBillNotificationRow,
+                channel.name(),
+                billId
+        ).stream().findFirst();
+    }
+
+    // 발송 완료/실패 후 최종 상태 업데이트
+    public int updateSendStatusComplete(Long billId, SendStatus sendStatus) {
+        return jdbcTemplate.update(
+                """
+                UPDATE bill_notification
+                SET send_status = ?::send_status_enum
+                WHERE bill_id = ?
+                """,
+                sendStatus.name(),
+                billId
+        );
+    }
+
     private RecentBillRow mapRecentBillRow(ResultSet rs, int rowNum) throws SQLException {
         return new RecentBillRow(
                 rs.getObject("billing_year_month", LocalDate.class),

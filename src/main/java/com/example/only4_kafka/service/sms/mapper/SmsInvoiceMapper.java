@@ -14,9 +14,8 @@ public class SmsInvoiceMapper {
 
     private final MemberDataDecryptor memberDataDecryptor;
 
-    public SmsBillDto toDto(SmsInvoiceReadResult result) {
-        SmsBillDto original = result.smsBillDto();
-
+    // [신규 메서드 - SmsBillDto를 직접 받는 버전]
+    public SmsBillDto toDto(SmsBillDto original) {
         // 전화번호 복호화 (발송용 - 원본)
         String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(original.phoneNumber());
         // 전화번호 복호화 + 마스킹 (청구서 표시용)

@@ -2,7 +2,6 @@ package com.example.only4_kafka.service.email;
 
 import com.example.only4_kafka.config.properties.RetryProperties;
 import com.example.only4_kafka.domain.bill_notification.BillChannel;
-import com.example.only4_kafka.domain.bill_notification.SendStatus;
 import com.example.only4_kafka.event.EmailSendRequestEvent;
 import com.example.only4_kafka.event.SmsSendRequestEvent;
 import com.example.only4_kafka.infrastructure.MemberDataDecryptor;
@@ -19,8 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
@@ -38,69 +36,76 @@ public class EmailSendService {
     private final SmsKafkaProducer smsKafkaProducer;
     private final ExecutorService emailSendExecutorService;
 
+    // [선점 타임아웃 설정]
+    // SENDING 상태에서 이 시간(초)이 지나면 타임아웃으로 간주하고 재선점 허용
+    private static final int PREEMPT_TIMEOUT_SECONDS = 10;
+
+    // ============================================================================
+    // [신규 로직 - 원자적 선점 기반]
+    //
+    // 흐름도:
+    //   Kafka 메시지 수신
+    //         ▼
+    //   tryPreempt(billId) ──── 실패(empty) ───→ return (다른 스레드가 처리 중)
+    //         │ 성공
+    //         ▼
+    //   데이터 조회 (EmailInvoiceReader)
+    //         ▼
+    //   템플릿 렌더링
+    //         ▼
+    //   이메일 발송 (비동기)
+    //         ├── 성공 → completeWithSuccess(billId) → SENT
+    //         └── 실패 → SMS 폴백 발행
+    // ============================================================================
+
     public void send(EmailSendRequestEvent event) {
-        // 1. 데이터 조회
-        EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(event.memberId(), event.billId());
-        BillNotificationRow billNotification = emailInvoiceReadResult.billNotificationRow();
+        Long billId = event.billId();
+        Long memberId = event.memberId();
 
-        // 2. 상태 체크 (SENT면 스킵 - 중복 방지)
-        if (!checkBillNotification(billNotification)) return;
+        // [STEP 1] 선점 시도 (가장 먼저!)
+        Optional<BillNotificationRow> preemptedOptional = billNotificationWriter.tryPreempt(
+                billId,
+                BillChannel.EMAIL,
+                PREEMPT_TIMEOUT_SECONDS
+        );
 
-        // 3. 렌더링
+        if (preemptedOptional.isEmpty()) {
+            // 선점 실패: 다른 스레드가 처리 중이거나, 이미 SENT/FAILED 상태
+            // → 이 메시지는 처리할 필요 없음, 정상 종료
+            log.info("[EMAIL_SKIP] billId={} 선점 실패. 다른 스레드가 처리 중이거나 이미 완료됨", billId);
+            return;
+        }
+
+        // [STEP 2] 데이터 조회
+        EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(memberId, billId);
+
+        // [STEP 3] 템플릿 렌더링
         EmailInvoiceTemplateDto emailInvoiceTemplateDto = emailInvoiceMapper.toDto(emailInvoiceReadResult);
         String htmlContent = emailTemplateRenderer.render(emailInvoiceTemplateDto);
 
-        // 4. SENT로 변경 (이메일 발송 전 선점)
-        billNotificationWriter.updateBillNotificationSendStatus(event.billId(), BillChannel.EMAIL, SendStatus.SENT, null);
-
-        // 5. 이메일 정보 추출
+        // [STEP 4] 이메일 주소 복호화
         String encryptedEmail = emailInvoiceReadResult.memberBill().memberEmail();
         String memberEmail = memberDataDecryptor.decryptEmail(encryptedEmail);
 
-        // 6. 이메일 발송 비동기 위임 (가상 스레드)
-//        emailSendExecutorService.submit(() -> {
-//            try {
-//                emailClient.send(memberEmail, htmlContent);
-//                log.info("[EMAIL_COMPLETE] billId={} 발송 완료", event.billId());
-//            } catch (Exception e) {
-//                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage());
-//                smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
-//            }
-//        });
+        // [STEP 5] SENT 상태로 변경 (발송 전에!)
+        // - 중복 발송 절대 방지 > 유실 허용 (유실은 추적 가능)
+        billNotificationWriter.completeWithSuccess(billId);
 
+        // [STEP 6] 이메일 발송 (비동기)
         emailSendExecutorService.submit(() -> {
             try {
                 emailClient.send(memberEmail, htmlContent);
-                log.info("[EMAIL_COMPLETE] billId={} 발송 완료", event.billId());
             } catch (Exception e) {
-                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage(), e);
-
+                log.error("[EMAIL_FAILED] billId={} 이메일 발송 실패. SMS 전환. error={}", billId, e.getMessage(), e);
+                // SMS 폴백 시도 (FAILED 상태 변경 안 함 - 이미 SENT로 표시됨)
                 try {
-                    smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
-                    log.info("[SMS_FALLBACK_TRIGGERED] billId={} SMS 발행 요청 호출 완료", event.billId());
+                    smsKafkaProducer.send(new SmsSendRequestEvent(memberId, billId));
+                    log.info("[SMS_FALLBACK_TRIGGERED] billId={} SMS 폴백 발행 완료", billId);
                 } catch (Exception ex) {
-                    // ★ 여기 로그가 찍히면 “kafkaTemplate.send()가 호출 시점에 즉시 예외”였던 것
-                    log.error("[SMS_FALLBACK_TRIGGER_FAILED_SYNC] billId={} SMS 발행 요청 중 즉시 실패. error={}",
-                            event.billId(), ex.getMessage(), ex);
+                    // SMS 발행도 실패한 경우
+                    log.error("[SMS_FALLBACK_FAILED] billId={} SMS 폴백 발행 실패. error={}", billId, ex.getMessage(), ex);
                 }
             }
         });
-
-
-    }
-
-    private boolean checkBillNotification(BillNotificationRow billNotification) {
-        if (billNotification.sendStatus() == SendStatus.PENDING || billNotification.sendStatus() == SendStatus.SENT) {
-            billNotificationWriter.updateBillNotificationSendStatus(
-                    billNotification.billId(), BillChannel.EMAIL, SendStatus.SENDING, LocalDateTime.now());
-            return true;
-        } else if (billNotification.sendStatus() == SendStatus.SENDING
-                && Duration.between(billNotification.processStartTime(), LocalDateTime.now()).getSeconds() >= retryProperties.initialIntervalMs()) {
-            billNotificationWriter.updateBillNotificationSendStatus(
-                    billNotification.billId(), BillChannel.EMAIL, SendStatus.SENDING, LocalDateTime.now());
-            return true;
-        } else {
-            return false;
-        }
     }
 }
