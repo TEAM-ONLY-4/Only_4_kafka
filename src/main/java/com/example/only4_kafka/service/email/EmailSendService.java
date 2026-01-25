@@ -55,8 +55,7 @@ public class EmailSendService {
     //         ▼
     //   이메일 발송 (비동기)
     //         ├── 성공 → completeWithSuccess(billId) → SENT
-    //         └── 실패 → completeWithFailure(billId) → FAILED
-    //                    SMS 폴백 발행
+    //         └── 실패 → SMS 폴백 발행
     // ============================================================================
 
     public void send(EmailSendRequestEvent event) {
@@ -104,7 +103,6 @@ public class EmailSendService {
                     log.info("[SMS_FALLBACK_TRIGGERED] billId={} SMS 폴백 발행 완료", billId);
                 } catch (Exception ex) {
                     // SMS 발행도 실패한 경우
-                    // TODO: DLT(Dead Letter Topic)로 전송하여 수동 처리 필요
                     log.error("[SMS_FALLBACK_FAILED] billId={} SMS 폴백 발행 실패. error={}", billId, ex.getMessage(), ex);
                 }
             }

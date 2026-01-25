@@ -14,9 +14,19 @@ public class SmsInvoiceMapper {
 
     private final MemberDataDecryptor memberDataDecryptor;
 
+    // ============================================================================
+    // [기존 메서드 - SmsInvoiceReadResult를 받는 버전]
+    // 선점 로직 적용 전 사용 (기존 코드 호환용)
+    // ============================================================================
     public SmsBillDto toDto(SmsInvoiceReadResult result) {
-        SmsBillDto original = result.smsBillDto();
+        return toDto(result.smsBillDto());
+    }
 
+    // ============================================================================
+    // [신규 메서드 - SmsBillDto를 직접 받는 버전]
+    // 선점 로직 적용 후 사용 (불필요한 래퍼 객체 제거)
+    // ============================================================================
+    public SmsBillDto toDto(SmsBillDto original) {
         // 전화번호 복호화 (발송용 - 원본)
         String decryptedPhoneNumber = memberDataDecryptor.decryptPhoneNumber(original.phoneNumber());
         // 전화번호 복호화 + 마스킹 (청구서 표시용)
