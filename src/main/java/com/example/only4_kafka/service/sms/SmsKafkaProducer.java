@@ -16,8 +16,6 @@ public class SmsKafkaProducer {
     private final KafkaTopicsProperties kafkaTopicsProperties;
 
     public void send(SmsSendRequestEvent smsSendRequestEvent) {
-        log.info("[SMS Kafka Producer]: START !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        log.info("[SMS Kafka Producer] 포함 내용:topic={}, memberId={}, billId={}", kafkaTopicsProperties.smsRequest(), smsSendRequestEvent.memberId(), smsSendRequestEvent.billId());
         String topic = kafkaTopicsProperties.smsRequest();
 
         kafkaTemplate.send(topic, String.valueOf(smsSendRequestEvent.billId()), smsSendRequestEvent)
@@ -30,7 +28,5 @@ public class SmsKafkaProducer {
                                 topic, smsSendRequestEvent.memberId(), smsSendRequestEvent.billId());
                     }
                 });
-
-        log.info("[SMS Kafka Producer]: END !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 }
