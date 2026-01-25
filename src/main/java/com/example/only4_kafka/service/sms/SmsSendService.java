@@ -63,12 +63,7 @@ public class SmsSendService {
     public void send(SmsSendRequestEvent event) {
         Long billId = event.billId();
 
-        // ========================================
         // [STEP 1] 선점 시도 (가장 먼저!)
-        // ========================================
-        // - 원자적 UPDATE로 PENDING → SENDING 상태 변경 시도
-        // - 성공하면 이 스레드가 처리 권한 획득
-        // - 실패하면 다른 스레드가 이미 처리 중 → 할 일 없음
         Optional<BillNotificationRow> preemptedOptional = billNotificationWriter.tryPreempt(
                 billId,
                 BillChannel.SMS,
@@ -77,7 +72,6 @@ public class SmsSendService {
 
         if (preemptedOptional.isEmpty()) {
             // 선점 실패: 다른 스레드가 처리 중이거나, 이미 SENT/FAILED 상태
-            // → 이 메시지는 처리할 필요 없음, 정상 종료
             log.info("[SMS_SKIP] billId={} 선점 실패. 다른 스레드가 처리 중이거나 이미 완료됨", billId);
             return;
         }

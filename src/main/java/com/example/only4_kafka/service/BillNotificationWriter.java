@@ -20,16 +20,6 @@ import java.util.Optional;
 public class BillNotificationWriter {
     private final InvoiceQueryRepository invoiceQueryRepository;
 
-    // 주의: 이 메서드는 선점 없이 무조건 업데이트하므로 Race Condition에 취약함
-    //       새로운 tryPreempt() 메서드 사용을 권장
-    @Transactional
-    public void updateBillNotificationSendStatus(Long billId, BillChannel channel, SendStatus sendStatus, LocalDateTime processStartTime) {
-        int updatedCount = invoiceQueryRepository.updateBillNotification(billId, channel, sendStatus, processStartTime);
-        if (updatedCount == 0) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-    }
-
     /**
      * bill_notification 선점 시도
      * 선점 성공 조건:
@@ -49,10 +39,5 @@ public class BillNotificationWriter {
     @Transactional
     public void completeWithSuccess(Long billId) {
         int updatedCount = invoiceQueryRepository.updateSendStatusComplete(billId, SendStatus.SENT);
-    }
-
-    @Transactional
-    public void completeWithFailure(Long billId) {
-        int updatedCount = invoiceQueryRepository.updateSendStatusComplete(billId, SendStatus.FAILED);
     }
 }
