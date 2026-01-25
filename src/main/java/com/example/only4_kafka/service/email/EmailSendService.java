@@ -58,15 +58,35 @@ public class EmailSendService {
         String memberEmail = memberDataDecryptor.decryptEmail(encryptedEmail);
 
         // 6. 이메일 발송 비동기 위임 (가상 스레드)
+//        emailSendExecutorService.submit(() -> {
+//            try {
+//                emailClient.send(memberEmail, htmlContent);
+//                log.info("[EMAIL_COMPLETE] billId={} 발송 완료", event.billId());
+//            } catch (Exception e) {
+//                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage());
+//                smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
+//            }
+//        });
+
         emailSendExecutorService.submit(() -> {
             try {
                 emailClient.send(memberEmail, htmlContent);
                 log.info("[EMAIL_COMPLETE] billId={} 발송 완료", event.billId());
             } catch (Exception e) {
-                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage());
-                smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
+                log.error("[EMAIL_FAILED] billId={} 발송 실패. SMS 전환. error={}", event.billId(), e.getMessage(), e);
+
+                try {
+                    smsKafkaProducer.send(new SmsSendRequestEvent(event.memberId(), event.billId()));
+                    log.info("[SMS_FALLBACK_TRIGGERED] billId={} SMS 발행 요청 호출 완료", event.billId());
+                } catch (Exception ex) {
+                    // ★ 여기 로그가 찍히면 “kafkaTemplate.send()가 호출 시점에 즉시 예외”였던 것
+                    log.error("[SMS_FALLBACK_TRIGGER_FAILED_SYNC] billId={} SMS 발행 요청 중 즉시 실패. error={}",
+                            event.billId(), ex.getMessage(), ex);
+                }
             }
         });
+
+
     }
 
     private boolean checkBillNotification(BillNotificationRow billNotification) {
