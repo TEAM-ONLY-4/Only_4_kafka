@@ -53,7 +53,8 @@ public class KafkaProducerConfig {
 
         // [3] 압축 설정 (선택 사항, 대량 데이터 시 네트워크 비용 절감)
         // CPU를 약간 쓰고 네트워크 대역폭을 아낍니다. (snappy, lz4, gzip 등)
-        props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        // lz4: 순수 Java 구현 포함으로 Alpine Linux에서도 네이티브 라이브러리 없이 작동
+        props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "lz4");
 
         // [4] 신뢰성 설정 (all: 모든 리플리카 저장 확인, 1: 리더만 확인)
         // 속도가 중요하면 '1', 데이터 유실 절대 안 되면 'all'
