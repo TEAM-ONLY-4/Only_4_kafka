@@ -36,41 +36,25 @@ public class EmailSendService {
     private final SmsKafkaProducer smsKafkaProducer;
     private final ExecutorService emailSendExecutorService;
 
-    // ============================================================================
     // [선점 타임아웃 설정]
     // SENDING 상태에서 이 시간(초)이 지나면 타임아웃으로 간주하고 재선점 허용
-    // ============================================================================
     private static final int PREEMPT_TIMEOUT_SECONDS = 10;
 
     // ============================================================================
     // [신규 로직 - 원자적 선점 기반]
     //
-    // 기존 문제점:
-    //   1. SELECT로 상태 조회 → 상태 체크 → UPDATE (Check-Then-Act 패턴)
-    //   2. 조회와 업데이트 사이에 다른 스레드가 개입 가능 (Race Condition)
-    //   3. 결과: 같은 bill_notification을 여러 스레드가 동시에 처리 → 중복 발송
-    //
-    // 해결 방법:
-    //   1. 먼저 선점(tryPreempt) 시도 → 원자적 UPDATE로 한 스레드만 성공
-    //   2. 선점 실패 시 → 다른 스레드가 처리 중이므로 조용히 종료 (할 일 없음)
-    //   3. 선점 성공 시 → 데이터 조회 → 렌더링 → 발송 → 완료 상태 업데이트
-    //
     // 흐름도:
     //   Kafka 메시지 수신
-    //         │
     //         ▼
     //   tryPreempt(billId) ──── 실패(empty) ───→ return (다른 스레드가 처리 중)
     //         │ 성공
     //         ▼
     //   데이터 조회 (EmailInvoiceReader)
-    //         │
     //         ▼
     //   템플릿 렌더링
-    //         │
     //         ▼
     //   이메일 발송 (비동기)
     //         ├── 성공 → completeWithSuccess(billId) → SENT
-    //         │
     //         └── 실패 → completeWithFailure(billId) → FAILED
     //                    SMS 폴백 발행
     // ============================================================================
@@ -94,7 +78,6 @@ public class EmailSendService {
         }
 
         // [STEP 2] 데이터 조회
-        // - 선점 성공 후에 조회
         EmailInvoiceReadResult emailInvoiceReadResult = emailInvoiceReader.read(memberId, billId);
 
         // [STEP 3] 템플릿 렌더링
@@ -107,12 +90,9 @@ public class EmailSendService {
 
         // [STEP 5] SENT 상태로 변경 (발송 전에!)
         // - 중복 발송 절대 방지 > 유실 허용 (유실은 추적 가능)
-        // - 발송 성공 후 SENT 변경 시, 변경 실패하면 재발송 위험
-        // - 따라서 SENT 먼저 → 발송 순서가 안전
         billNotificationWriter.completeWithSuccess(billId);
 
         // [STEP 6] 이메일 발송 (비동기)
-        // - 이미 SENT 상태이므로 다른 스레드가 재처리 불가
         emailSendExecutorService.submit(() -> {
             try {
                 emailClient.send(memberEmail, htmlContent);
