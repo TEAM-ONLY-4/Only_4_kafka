@@ -241,9 +241,11 @@ public class InvoiceQueryRepository {
     }
 
     private SmsBillDto mapSmsBillDto(ResultSet rs, LocalDate now) throws SQLException {
+        String encryptedPhoneNumber = rs.getString("phone_number");
         return new SmsBillDto(
                 rs.getString("name"),
-                rs.getString("phone_number"),
+                encryptedPhoneNumber,
+                encryptedPhoneNumber,  // Mapper에서 복호화+마스킹 처리
                 rs.getObject("do_not_disturb_start_time", LocalTime.class),
                 rs.getObject("do_not_disturb_end_time", LocalTime.class),
                 rs.getString("payment_owner_name_snapshot"),
