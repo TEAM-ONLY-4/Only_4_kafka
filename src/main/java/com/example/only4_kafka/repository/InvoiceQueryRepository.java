@@ -178,6 +178,29 @@ public class InvoiceQueryRepository {
         );
     }
 
+    // SMS 전용 선점 (EMAIL → SMS 폴백 허용)
+    public Optional<BillNotificationRow> tryPreemptForSms(Long billId, int timeoutSeconds) {
+        String sql = """
+                UPDATE bill_notification
+                SET send_status = 'SENDING'::send_status_enum,
+                    channel = 'SMS'::bill_channel_enum,
+                    process_start_time = NOW()
+                WHERE bill_id = ?
+                  AND (
+                    send_status = 'PENDING'
+                    OR (send_status = 'SENDING' AND process_start_time < NOW() - INTERVAL '%d seconds')
+                    OR channel = 'EMAIL'
+                  )
+                RETURNING member_id, bill_id, channel, send_status, process_start_time
+                """.formatted(timeoutSeconds);
+
+        return jdbcTemplate.query(
+                sql,
+                this::mapBillNotificationRow,
+                billId
+        ).stream().findFirst();
+    }
+
     private RecentBillRow mapRecentBillRow(ResultSet rs, int rowNum) throws SQLException {
         return new RecentBillRow(
                 rs.getObject("billing_year_month", LocalDate.class),

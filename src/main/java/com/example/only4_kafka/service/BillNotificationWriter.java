@@ -30,10 +30,21 @@ public class BillNotificationWriter {
      *   - send_status = SENT (이미 완료됨)
      *   - send_status = FAILED (이미 실패 처리됨)
      */
+    /**
+     * Email 전용 선점
+     */
     @Transactional
     public Optional<BillNotificationRow> tryPreempt(Long billId, BillChannel channel, int timeoutSeconds) {
-        Optional<BillNotificationRow> preemptedRow = invoiceQueryRepository.tryPreemptForSending(billId, channel, timeoutSeconds);
-        return preemptedRow;
+        return invoiceQueryRepository.tryPreemptForSending(billId, channel, timeoutSeconds);
+    }
+
+    /**
+     * SMS 전용 선점 (EMAIL → SMS 폴백 허용)
+     * - PENDING, SENDING+타임아웃 외에도 EMAIL 채널이면 선점 허용
+     */
+    @Transactional
+    public Optional<BillNotificationRow> tryPreemptForSms(Long billId, int timeoutSeconds) {
+        return invoiceQueryRepository.tryPreemptForSms(billId, timeoutSeconds);
     }
 
     @Transactional
