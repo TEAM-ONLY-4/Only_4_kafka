@@ -63,10 +63,9 @@ public class SmsSendService {
     public void send(SmsSendRequestEvent event) {
         Long billId = event.billId();
 
-        // [STEP 1] 선점 시도 (가장 먼저!)
-        Optional<BillNotificationRow> preemptedOptional = billNotificationWriter.tryPreempt(
+        // [STEP 1] 선점 시도 (SMS 전용 - EMAIL → SMS 폴백 허용)
+        Optional<BillNotificationRow> preemptedOptional = billNotificationWriter.tryPreemptForSms(
                 billId,
-                BillChannel.SMS,
                 PREEMPT_TIMEOUT_SECONDS
         );
 
